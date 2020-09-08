@@ -79,17 +79,17 @@ module Orgmode
       @options["^"] != "nil"
     end
 
+    def initialize_lines(lines)
+      return lines if lines.is_a? Array
+      return lines.split("\n") if lines.is_a? String
+
+      raise "Unsupported type for +lines+: #{lines.class}"
+    end
+
     # I can construct a parser object either with an array of lines
     # or with a single string that I will split along \n boundaries.
     def initialize(lines, parser_options={ })
-      if lines.is_a? Array then
-        @lines = lines
-      elsif lines.is_a? String then
-        @lines = lines.split("\n")
-      else
-        raise "Unsupported type for +lines+: #{lines.class}"
-      end
-
+      @lines = initialize_lines lines
       @custom_keywords = []
       @headlines = Array.new
       @current_headline = nil
@@ -156,7 +156,7 @@ module Orgmode
           if line.include_file? and not line.include_file_path.nil?
             next if not check_include_file line.include_file_path
             include_data = get_include_data line
-            include_lines = Orgmode::Parser.new(include_data, @parser_options).lines
+            include_lines = initialize_lines include_data
             parse_lines include_lines
           end
         end
