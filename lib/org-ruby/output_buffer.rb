@@ -46,7 +46,6 @@ module Orgmode
       @mode_stack.last
     end
 
-
     def push_mode(mode, indent, properties={})
       @mode_stack.push(mode)
       @list_indent_stack.push(indent)
@@ -77,7 +76,8 @@ module Orgmode
       when line.title?
         @buffer << line.output_text
       when line.raw_text?
-        @buffer << "\n" << line.output_text if line.raw_text_tag == @buffer_tag
+        # This case is for html buffer, because buffer_tag is a method
+        @buffer << "\n" << line.output_text if line.raw_text_tag == buffer_tag
       when preserve_whitespace?
         @buffer << "\n" << line.output_text unless line.block_type
       when line.assigned_paragraph_type == :code
@@ -172,7 +172,20 @@ module Orgmode
       @logger.debug "Continuing export with default tags."
     end
 
-    ######################################################################
+    protected
+
+    attr_reader :block_lang, :list_indent_stack
+
+    def indentation_level
+      list_indent_stack.length - 1
+    end
+
+    # Implemented only in HtmlOutputBuffer
+    def buffer_tag
+      # raise NoImplementedError 'implemnt this in your output buffer'
+      nil
+    end
+
     private
 
     def mode_is_heading?(mode)
