@@ -9,10 +9,10 @@ module Orgmode
   class OutputBuffer
 
     # This is the overall output buffer
-    attr_reader :output
+    attr_reader :output, :mode_stack
 
     # This is the current type of output being accumulated.
-    attr_accessor :output_type
+    attr_accessor :output_type, :headline_number_stack
 
     # Creates a new OutputBuffer object that is bound to an output object.
     # The output will get flushed to =output=.
@@ -30,31 +30,31 @@ module Orgmode
       @output_type = :start
       @list_indent_stack = []
       @mode_stack = []
-      @code_block_indent = nil
 
+      # html_buffer
+      @code_block_indent = nil
+      # regexp module
+      @re_help = RegexpHelper.new
       @logger = Logger.new(STDERR)
-      if ENV['DEBUG'] or $DEBUG
+      if ENV['DEBUG'] || $DEBUG
         @logger.level = Logger::DEBUG
       else
         @logger.level = Logger::WARN
       end
-
-      @re_help = RegexpHelper.new
     end
 
     def current_mode
-      @mode_stack.last
+      mode_stack.last
     end
 
     def push_mode(mode, indent, properties={})
-      @mode_stack.push(mode)
-      @list_indent_stack.push(indent)
+      mode_stack.push(mode)
+      # Here seem that inherit buffers do their magic.
+      list_indent_stack.push(indent)
     end
 
-    def pop_mode(mode = nil)
-      m = @mode_stack.pop
-      @logger.warn "Modes don't match. Expected to pop #{mode}, but popped #{m}" if mode && mode != m
-      m
+    def pop_mode(mode=nil)
+      mode_stack.pop
     end
 
     def insert(line)
@@ -69,33 +69,54 @@ module Orgmode
         maintain_mode_stack(line)
       end
 
+      @buffer.concat(line_get_content(line))
+      html_buffer_code_block_indent(line)
+      @output_type = line.assigned_paragraph_type || line.paragraph_type
+    end
+
+    # Insert line Helpers
+    # This is a line method
+    def line_get_content(line)
       # Adds the current line to the output buffer
       case
       when line.assigned_paragraph_type == :comment
         # Don't add to buffer
+        return ""
       when line.title?
-        @buffer << line.output_text
+        return line.output_text
       when line.raw_text?
         # This case is for html buffer, because buffer_tag is a method
-        @buffer << "\n" << line.output_text if line.raw_text_tag == buffer_tag
+        if line.raw_text_tag == buffer_tag
+          return "\n#{line.output_text}"
+        else
+          return ""
+        end
       when preserve_whitespace?
-        @buffer << "\n" << line.output_text unless line.block_type
+        if line.block_type
+          return ""
+        else
+          return "\n#{line.output_text}"
+        end
       when line.assigned_paragraph_type == :code
         # If the line is contained within a code block but we should
         # not preserve whitespaces, then we do nothing.
+        return ""
       when (line.kind_of? Headline)
-        add_line_attributes line
-        @buffer << "\n" << line.output_text.strip
+        add_line_attributes(line)
+        return "\n#{line.output_text.strip}"
+
       when ([:definition_term, :list_item, :table_row, :table_header,
              :horizontal_rule].include? line.paragraph_type)
-        @buffer << "\n" << line.output_text.strip
-      when line.paragraph_type == :paragraph
-        @buffer << "\n"
-        buffer_indentation
-        @buffer << line.output_text.strip
-      end
 
-      if mode_is_code? current_mode and not line.block_type
+        return "\n#{line.output_text.strip}"
+      when line.paragraph_type == :paragraph
+        return "\n""#{buffer_indentation}#{line.output_text.strip}"
+      else ""
+      end
+    end
+
+    def html_buffer_code_block_indent(line)
+      if mode_is_code?(current_mode) && !(line.block_type)
         # Determines the amount of whitespaces to be stripped at the
         # beginning of each line in code block.
         if line.paragraph_type != :blank
@@ -106,23 +127,22 @@ module Orgmode
           end
         end
       end
-
-      @output_type = line.assigned_paragraph_type || line.paragraph_type
     end
+    # Insert helpers end here.
 
     # Gets the next headline number for a given level. The intent is
     # this function is called sequentially for each headline that
     # needs to get numbered. It does standard outline numbering.
     def get_next_headline_number(level)
       raise "Headline level not valid: #{level}" if level <= 0
+
       while level > @headline_number_stack.length do
         @headline_number_stack.push 0
       end
       while level < @headline_number_stack.length do
         @headline_number_stack.pop
       end
-      raise "Oops, shouldn't happen" unless level == @headline_number_stack.length
-      @headline_number_stack[@headline_number_stack.length - 1] += 1
+      @headline_number_stack[level - 1] += 1
       @headline_number_stack.join(".")
     end
 
@@ -301,7 +321,10 @@ module Orgmode
       false
     end
 
-    def buffer_indentation; false; end
+    def buffer_indentation
+      ""
+    end
+
     def flush!; false; end
     def output_footnotes!; false; end
   end                           # class OutputBuffer

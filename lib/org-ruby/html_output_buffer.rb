@@ -103,7 +103,7 @@ module Orgmode
       m = super(mode)
       return @list_indent_stack.pop unless html_tags.include?(m)
       return @list_indent_stack.pop if skip_css?(m)
-      push_indentation  @new_paragraph
+      push_indentation(@new_paragraph)
       @output.concat("</#{HtmlBlockTag[m]}>")
       @list_indent_stack.pop
     end
@@ -137,6 +137,7 @@ module Orgmode
         @new_paragraph = nil
         if (current_mode == :definition_term)
           d = @buffer.split(/\A(.*[ \t]+|)::(|[ \t]+.*?)$/, 4)
+
           definition = d[1].strip
           if definition.empty?
             @output << "???"
@@ -148,7 +149,7 @@ module Orgmode
 
           @new_paragraph = :start
           push_mode(:definition_descr, indent)
-          @output << inline_formatting(d[2].strip + d[3])
+          @output.concat inline_formatting(d[2].strip + d[3])
           @new_paragraph = nil
         elsif (current_mode == :horizontal_rule)
 
@@ -273,8 +274,7 @@ module Orgmode
     end
 
     def buffer_indentation
-      indent = "  " * @list_indent_stack.length
-      @buffer << indent
+       "  " * @list_indent_stack.length
     end
 
     def add_paragraph
@@ -294,9 +294,10 @@ module Orgmode
 
     # Applies inline formatting rules to a string.
     def inline_formatting(str)
-      @re_help.rewrite_emphasis str do |marker, s|
-        if marker == "=" or marker == "~"
-          s = escapeHTML s
+      @re_help.rewrite_emphasis(str) do |marker, s|
+
+        if marker == "=" || marker == "~"
+          s = escapeHTML(s)
           "<#{Tags[marker][:open]}>#{s}</#{Tags[marker][:close]}>"
         else
           quote_tags("<#{Tags[marker][:open]}>") + s +
