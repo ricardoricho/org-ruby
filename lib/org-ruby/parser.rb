@@ -100,7 +100,7 @@ module Orgmode
       @parser_options = parser_options
 
       #
-      # Include file feature disabled by default since 
+      # Include file feature disabled by default since
       # it would be dangerous in some environments
       #
       # http://orgmode.org/manual/Include-files.html
@@ -339,14 +339,15 @@ module Orgmode
     def to_html
       mark_trees_for_export
       export_options = {
-        :decorate_title        => @in_buffer_settings["TITLE"],
-        :export_heading_number => export_heading_number?,
-        :export_todo           => export_todo?,
-        :use_sub_superscripts  => use_sub_superscripts?,
-        :export_footnotes      => export_footnotes?,
-        :link_abbrevs          => @link_abbrevs,
-        :skip_syntax_highlight => @parser_options[:skip_syntax_highlight],
-        :markup_file           => @parser_options[:markup_file]
+        decorate_title: in_buffer_settings['TITLE'],
+        export_heading_number: export_heading_number?,
+        export_todo: export_todo?,
+        use_sub_superscripts: use_sub_superscripts?,
+        export_footnotes: export_footnotes?,
+        link_abbrevs: @link_abbrevs,
+        skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
+        markup_file: @parser_options[:markup_file],
+        footnotes_title: @parser_options[:footnotes_title]
       }
       export_options[:skip_tables] = true if not export_tables?
       output = ""
@@ -377,8 +378,8 @@ module Orgmode
       output << "\n"
 
       return output if @parser_options[:skip_rubypants_pass]
-        
-      rp = RubyPants.new(output) 
+
+      rp = RubyPants.new(output)
       rp.to_html
     end
 

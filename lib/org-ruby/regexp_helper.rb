@@ -91,7 +91,7 @@ module Orgmode
     # replace "*bold*", "/italic/", and "=code=",
     # respectively. (Clearly this sample string will use HTML-like
     # syntax, assuming +map+ is defined appropriately.)
-    def rewrite_emphasis str
+    def rewrite_emphasis(str)
       # escape the percent signs for safe restoring code snippets
       str.gsub!(/%/, "%%")
       format_str = "%s"

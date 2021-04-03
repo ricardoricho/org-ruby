@@ -9,7 +9,7 @@ module Orgmode
   class OutputBuffer
 
     # This is the overall output buffer
-    attr_reader :output, :mode_stack
+    attr_reader :output, :mode_stack, :list_indent_stack
 
     # This is the current type of output being accumulated.
     attr_accessor :output_type, :headline_number_stack
@@ -81,36 +81,36 @@ module Orgmode
       case
       when line.assigned_paragraph_type == :comment
         # Don't add to buffer
-        return ""
+        ""
       when line.title?
-        return line.output_text
+        line.output_text
       when line.raw_text?
         # This case is for html buffer, because buffer_tag is a method
         if line.raw_text_tag == buffer_tag
-          return "\n#{line.output_text}"
+          "\n#{line.output_text}"
         else
-          return ""
+          ""
         end
       when preserve_whitespace?
         if line.block_type
-          return ""
+          ""
         else
-          return "\n#{line.output_text}"
+          "\n#{line.output_text}"
         end
       when line.assigned_paragraph_type == :code
         # If the line is contained within a code block but we should
         # not preserve whitespaces, then we do nothing.
-        return ""
-      when (line.kind_of? Headline)
+        ""
+      when line.is_a?(Headline)
         add_line_attributes(line)
-        return "\n#{line.output_text.strip}"
+        "\n#{line.output_text.strip}"
 
       when ([:definition_term, :list_item, :table_row, :table_header,
              :horizontal_rule].include? line.paragraph_type)
 
-        return "\n#{line.output_text.strip}"
+        "\n#{line.output_text.strip}"
       when line.paragraph_type == :paragraph
-        return "\n""#{buffer_indentation}#{line.output_text.strip}"
+        "\n""#{buffer_indentation}#{line.output_text.strip}"
       else ""
       end
     end

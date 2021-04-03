@@ -34,8 +34,10 @@ module Orgmode
       @new_paragraph = :start
       @footnotes = {}
       @unclosed_tags = []
-      @custom_blocktags = {} if @options[:markup_file]
-      do_custom_markup if @options[:markup_file]
+      # move from output_buffer
+      @code_block_indent = nil
+
+      do_custom_markup
     end
 
     def buffer_tag
@@ -101,11 +103,11 @@ module Orgmode
     # entering this mode.
     def pop_mode(mode = nil)
       m = super(mode)
-      return @list_indent_stack.pop unless html_tags.include?(m)
-      return @list_indent_stack.pop if skip_css?(m)
+      return list_indent_stack.pop unless html_tags.include?(m)
+      return list_indent_stack.pop if skip_css?(m)
       push_indentation(@new_paragraph)
       @output.concat("</#{HtmlBlockTag[m]}>")
-      @list_indent_stack.pop
+      list_indent_stack.pop
     end
 
     def highlight(code, lang)
@@ -144,7 +146,7 @@ module Orgmode
           else
             @output << inline_formatting(definition)
           end
-          indent = @list_indent_stack.last
+          indent = list_indent_stack.last
           pop_mode
 
           @new_paragraph = :start
@@ -199,13 +201,15 @@ module Orgmode
       end
     end
 
+    # Only footnotes defined in the footnote (i.e., [fn:0:this is the footnote definition])
+    # will be automatically
+    # added to a separate Footnotes section at the end of the document. All footnotes that are
+    # defined separately from their references will be rendered where they appear in the original
+    # Org document.
     def output_footnotes!
-      # Only footnotes defined in the footnote (i.e., [fn:0:this is the footnote definition]) will be automatically
-      # added to a separate Footnotes section at the end of the document. All footnotes that are defined separately
-      # from their references will be rendered where they appear in the original Org document.
-      return false unless @options[:export_footnotes] and not @footnotes.empty?
+      return false if !options[:export_footnotes] || @footnotes.empty?
+      @output.concat footnotes_header
 
-      @output << "\n<div id=\"footnotes\">\n<h2 class=\"footnotes\">Footnotes:</h2>\n<div id=\"text-footnotes\">\n"
       @footnotes.each do |name, (defi, content)|
         @buffer = defi
         @output << "<div class=\"footdef\"><sup><a id=\"fn.#{name}\" href=\"#fnr.#{name}\">#{name}</a></sup>" \
@@ -219,10 +223,39 @@ module Orgmode
       return true
     end
 
+    def footnotes_header
+      footnotes_title = options[:footnotes_title] || "Footnotes:"
+      "\n<div id=\"footnotes\">\n<h2 class=\"footnotes\">#{footnotes_title}</h2>\n<div id=\"text-footnotes\">\n"
+    end
+
     # Test if we're in an output mode in which whitespace is significant.
     def preserve_whitespace?
-      super or current_mode == :html
+      super || current_mode == :html
     end
+
+    protected
+
+    def do_custom_markup
+      file = options[:markup_file]
+      return unless file
+      return no_custom_markup_file_exists unless File.exists?(file)
+
+      @custom_blocktags = load_custom_markup(file)
+      @custom_blocktags.empty? && no_valid_markup_found ||
+        set_custom_markup
+    end
+
+    def load_custom_markup(file)
+      require 'yaml'
+      if (self.class.to_s == 'Orgmode::MarkdownOutputBuffer')
+        filter = '^MarkdownMap$'
+      else
+        filter = '^HtmlBlockTag$|^Tags$'
+      end
+      @custom_blocktags = YAML.load_file(@options[:markup_file]).select {|k| k.to_s.match(filter) }
+    end
+
+
 
     ######################################################################
     private
@@ -274,12 +307,12 @@ module Orgmode
     end
 
     def buffer_indentation
-       "  " * @list_indent_stack.length
+       "  " * list_indent_stack.length
     end
 
     def add_paragraph
-      indent = "  " * (@list_indent_stack.length - 1)
-      @output << "\n" << indent
+      indent = "  " * (list_indent_stack.length - 1)
+      @output.concat "\n#{indent}"
     end
 
     Tags = {
@@ -294,13 +327,12 @@ module Orgmode
 
     # Applies inline formatting rules to a string.
     def inline_formatting(str)
-      @re_help.rewrite_emphasis(str) do |marker, s|
-
+      @re_help.rewrite_emphasis(str) do |marker, text|
         if marker == "=" || marker == "~"
-          s = escapeHTML(s)
-          "<#{Tags[marker][:open]}>#{s}</#{Tags[marker][:close]}>"
+          escaped_text = escapeHTML(text)
+          "<#{Tags[marker][:open]}>#{escaped_text}</#{Tags[marker][:close]}>"
         else
-          quote_tags("<#{Tags[marker][:open]}>") + s +
+          quote_tags("<#{Tags[marker][:open]}>") + text +
             quote_tags("</#{Tags[marker][:close]}>")
         end
       end
