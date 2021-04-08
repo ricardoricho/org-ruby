@@ -34,6 +34,7 @@ module Orgmode
       @new_paragraph = :start
       @footnotes = {}
       @unclosed_tags = []
+
       # move from output_buffer
       @code_block_indent = nil
 
@@ -189,10 +190,11 @@ module Orgmode
     #flush helpers ends here.
 
 
-    def add_line_attributes headline
+    def add_line_attributes(headline)
       if @options[:export_heading_number]
         level = headline.level
-        heading_number = get_next_headline_number(level)
+        headline_level = headline.headline_level
+        heading_number = get_next_headline_number(headline_level)
         @output << "<span class=\"heading-number heading-number-#{level}\">#{heading_number}</span> "
       end
       if @options[:export_todo] and headline.keyword
@@ -200,6 +202,21 @@ module Orgmode
         @output << "<span class=\"todo-keyword #{keyword}\">#{keyword}</span> "
       end
     end
+
+    def html_buffer_code_block_indent(line)
+      if mode_is_code?(current_mode) && !(line.block_type)
+        # Determines the amount of whitespaces to be stripped at the
+        # beginning of each line in code block.
+        if line.paragraph_type != :blank
+          if @code_block_indent
+            @code_block_indent = [@code_block_indent, line.indent].min
+          else
+            @code_block_indent = line.indent
+          end
+        end
+      end
+    end
+
 
     # Only footnotes defined in the footnote (i.e., [fn:0:this is the footnote definition])
     # will be automatically

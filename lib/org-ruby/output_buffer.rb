@@ -31,8 +31,6 @@ module Orgmode
       @list_indent_stack = []
       @mode_stack = []
 
-      # html_buffer
-      @code_block_indent = nil
       # regexp module
       @re_help = RegexpHelper.new
       @logger = Logger.new(STDERR)
@@ -73,8 +71,8 @@ module Orgmode
       html_buffer_code_block_indent(line)
       @output_type = line.assigned_paragraph_type || line.paragraph_type
     end
-
     # Insert line Helpers
+
     # This is a line method
     def line_get_content(line)
       # Adds the current line to the output buffer
@@ -116,17 +114,7 @@ module Orgmode
     end
 
     def html_buffer_code_block_indent(line)
-      if mode_is_code?(current_mode) && !(line.block_type)
-        # Determines the amount of whitespaces to be stripped at the
-        # beginning of each line in code block.
-        if line.paragraph_type != :blank
-          if @code_block_indent
-            @code_block_indent = [@code_block_indent, line.indent].min
-          else
-            @code_block_indent = line.indent
-          end
-        end
-      end
+      # this is implemented in html output buffer only
     end
     # Insert helpers end here.
 
@@ -277,7 +265,7 @@ module Orgmode
       end
     end
 
-    def add_line_attributes headline
+    def add_line_attributes(headline)
       # Implemented by specific output buffers
     end
 
