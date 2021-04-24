@@ -210,11 +210,7 @@ module Orgmode
 
           # We treat the results code block differently since the exporting can be omitted
           if line.begin_block?
-            @next_results_block_should_be_exported = if line.results_block_should_be_exported?
-                                                       true
-                                                     else
-                                                       false
-                                                     end
+            @next_results_block_should_be_exported = line.results_block_should_be_exported?
           end
         end
 

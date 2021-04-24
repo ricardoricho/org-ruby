@@ -225,8 +225,8 @@ module Orgmode
     # Org document.
     def output_footnotes!
       return false if !options[:export_footnotes] || @footnotes.empty?
-      @output.concat footnotes_header
 
+      @output.concat footnotes_header
       @footnotes.each do |name, (defi, content)|
         @buffer = defi
         @output << "<div class=\"footdef\"><sup><a id=\"fn.#{name}\" href=\"#fnr.#{name}\">#{name}</a></sup>" \
@@ -235,9 +235,9 @@ module Orgmode
                 << "</p></div>\n"
       end
 
-      @output << "</div>\n</div>"
+      @output.concat "</div>\n</div>"
 
-      return true
+      true
     end
 
     def footnotes_header

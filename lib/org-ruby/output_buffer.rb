@@ -211,18 +211,17 @@ module Orgmode
 
     def boundary_of_block?(line)
       # Boundary of inline example
-      return true if ((line.paragraph_type == :inline_example) ^
-                      (@output_type == :inline_example))
-      # Boundary of begin...end block
-      return true if mode_is_block? @output_type
+      ((line.paragraph_type == :inline_example) ^ (@output_type == :inline_example)) ||
+        # Boundary of begin...end block
+        mode_is_block?(@output_type)
     end
 
     def maintain_mode_stack(line)
       # Always close the following lines
-      pop_mode if (mode_is_heading? current_mode or
-                   current_mode == :paragraph or
-                   current_mode == :horizontal_rule or
-                   current_mode == :inline_example or
+      pop_mode if (mode_is_heading?(current_mode) ||
+                   current_mode == :paragraph ||
+                   current_mode == :horizontal_rule ||
+                   current_mode == :inline_example ||
                    current_mode == :raw_text)
 
       # End-block line closes every mode within block
@@ -281,7 +280,7 @@ module Orgmode
 
       # Special case: Handles accumulating block content and example lines
       if mode_is_code? current_mode
-        return true unless (line.end_block? and
+        return true unless (line.end_block? &&
                             line.paragraph_type == current_mode)
       end
       return false if boundary_of_block? line
