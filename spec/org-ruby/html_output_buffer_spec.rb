@@ -26,7 +26,6 @@ module Orgmode
     end
 
     describe '#push_mode' do
-      xit 'calls super method'
       context 'when mode is a HtmlBlockTag' do
         let(:mode) { :paragraph }
         let(:indent) { :some_value }
@@ -64,10 +63,6 @@ module Orgmode
         context 'when mode is src' do
           let(:mode) { :src }
 
-          context 'when Buffer options include skip_syntax_highligth = false' do
-            xit 'do not touch output buffer '
-          end
-
           context 'when Buffer options include skip_syntax_highlight = true' do
             let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, { skip_syntax_highlight: true })}
             before(:each) do
@@ -97,11 +92,6 @@ module Orgmode
         xcontext 'when tag is table' do
         end
 
-        xit 'add new line and indentation when runs for first time' do
-          buffer.push_mode(mode, indent)
-          expect(buffer.output).to match /\Z/
-        end
-
         context 'when called for second time' do
           before(:each) do
             buffer.push_mode(mode, indent)
@@ -110,10 +100,9 @@ module Orgmode
           it 'does not add paragprah' do
             mode = :src
             buffer.push_mode(mode, 'indent')
-            expect(buffer.output).not_to match /\Z\n/
+            expect(buffer.output).not_to match(/\Z\n/)
           end
         end
-
       end
     end
   end

@@ -460,6 +460,8 @@ module Orgmode
       end
     end
 
+    private
+
     # The CGI::escapeHTML function backported from the Ruby standard library
     # as of commit fd2fc885b43283aa3d76820b2dfa9de19a77012f
     #
@@ -474,14 +476,14 @@ module Orgmode
       '&' => '&amp;',
       '"' => '&quot;',
       '<' => '&lt;',
-      '>' => '&gt;',
-    }
+      '>' => '&gt;'
+    }.freeze
+
     # Escape special characters in HTML, namely &\"<>
     #   escapeHTML('Usage: foo "bar" <baz>')
     #      # => "Usage: foo &quot;bar&quot; &lt;baz&gt;"
-    private
     def escapeHTML(string)
-      string.gsub(/['&\"<>]/, TABLE_FOR_ESCAPE_HTML__)
+      string.gsub(/['&"<>]/, TABLE_FOR_ESCAPE_HTML__)
     end
-  end                           # class HtmlOutputBuffer
-end                             # module Orgmode
+  end
+end

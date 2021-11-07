@@ -269,12 +269,12 @@ module Orgmode
     end
 
     def output_footnotes!
-      return false
+      false
     end
 
     # Tests if the current line should be accumulated in the current
     # output buffer.
-    def should_accumulate_output? line
+    def should_accumulate_output?(line)
       # Special case: Assign mode if not yet done.
       return false unless current_mode
 
@@ -287,9 +287,9 @@ module Orgmode
       return true if current_mode == :inline_example
 
       # Special case: Don't accumulate the following lines.
-      return false if (mode_is_heading? @output_type or
-                       @output_type == :comment or
-                       @output_type == :horizontal_rule or
+      return false if (mode_is_heading?(@output_type) ||
+                       @output_type == :comment ||
+                       @output_type == :horizontal_rule ||
                        @output_type == :raw_text)
 
       # Special case: Blank line at least splits paragraphs
@@ -298,7 +298,7 @@ module Orgmode
       if line.paragraph_type == :paragraph
         # Paragraph gets accumulated only if its indent level is
         # greater than the indent level of the previous mode.
-        if @mode_stack[-2] and not mode_is_block? @mode_stack[-2]
+        if @mode_stack[-2] && !mode_is_block?(@mode_stack[-2])
           return false if line.indent <= @list_indent_stack[-2]
         end
         # Special case: Multiple "paragraphs" get accumulated.
