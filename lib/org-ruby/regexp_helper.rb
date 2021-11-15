@@ -40,17 +40,11 @@ module Orgmode
     #              non-shy groups here, and don't allow newline here.
     # newline      The maximum number of newlines allowed in an emphasis exp.
 
-    attr_reader :org_image_file_regexp
-
     def initialize
       # Set up the emphasis regular expression.
       @code_snippet_stack = []
       @logger = Logger.new(STDERR)
       @logger.level = Logger::WARN
-      build_org_link_regexp
-      @org_subp_regexp = /([_^])\{(.*?)\}/
-      @org_footnote_regexp = /\[fn:(.+?)(:(.*))?\]/
-      @org_footnote_def_regexp = /^\[fn:(.+?)(:(.*))?\]( (.+))?/
     end
 
     # Finds all emphasis matches in a string.
@@ -102,21 +96,21 @@ module Orgmode
     end
 
     # rewrite subscript and superscript (_{foo} and ^{bar})
-    def rewrite_subp(str) # :yields: type ("_" for subscript and "^" for superscript), text
-      str.gsub! @org_subp_regexp do |_match|
+    def rewrite_subp(str)
+      str.gsub!(org_subp_regexp) do |_match|
         yield Regexp.last_match(1), Regexp.last_match(2)
       end
     end
 
     # rewrite footnotes
-    def rewrite_footnote(str) # :yields: name, definition or nil
-      str.gsub! @org_footnote_regexp do |_match|
+    def rewrite_footnote(str)
+      str.gsub!(org_footnote_regexp) do |_match|
         yield Regexp.last_match(1), Regexp.last_match(3)
       end
     end
 
     def rewrite_footnote_definition(str)
-      str.gsub! @org_footnote_def_regexp do |_match|
+      str.gsub!(org_footnote_def_regexp) do |_match|
         yield Regexp.last_match(1), Regexp.last_match(5)
       end
     end
@@ -147,10 +141,10 @@ module Orgmode
     # HTML-style link, and that is how things will get recorded in
     # +result+.
     def rewrite_links(str)
-      str.gsub! @org_link_regexp do |_match|
-        yield Regexp.last_match(1), Regexp.last_match(3)
+      str.gsub!(org_link_regexp) do |_match|
+        yield Regexp.last_match['url'], Regexp.last_match['friendly_text']
       end
-      str.gsub! @org_angle_link_text_regexp do |_match|
+      str.gsub!(org_angle_link_text_regexp) do |_match|
         yield Regexp.last_match(1), nil
       end
 
@@ -172,10 +166,18 @@ module Orgmode
                  "(?=#{post_emphasis})")
     end
 
+    def org_link_regexp
+      /\[\[(?<url>[^\[\]]+)\](\[(?<friendly_text>[^\[\]]+)\])?\]/x
+    end
+
+    def org_image_file_regexp
+      /\.(gif|jpe?g|p(?:bm|gm|n[gm]|pm)|svgz?|tiff?|x[bp]m)/i
+    end
+
     private
 
     def pre_emphasis_regexp
-      '^|\s|[\(\'"\{]'
+      '^|\s|[\(\'"\{\[]'
     end
 
     def markers_regexp
@@ -187,21 +189,27 @@ module Orgmode
     end
 
     def post_emphasis
-      '\s|[-,\.;:!\?\'"\)\}]|$'
+      '\s|[-,\.;:!\?\'"\)\}\]]|$'
     end
 
     def body_regexp
       '.*?(?:\\n.*?){0,1}'
     end
 
-    def build_org_link_regexp
-      @org_link_regexp = /\[\[
-                             ([^\]\[]+) # This is the URL
-                          \](\[
-                             ([^\]\[]+) # This is the friendly text
-                          \])?\]/x
-      @org_angle_link_text_regexp = /<(\w+:[^\]\s<>]+)>/
-      @org_image_file_regexp = /\.(gif|jpe?g|p(?:bm|gm|n[gm]|pm)|svgz?|tiff?|x[bp]m)/i
+    def org_subp_regexp
+      /([_^])\{(.*?)\}/
+    end
+
+    def org_footnote_regexp
+      /\[fn:(.+?)(:(.*))?\]/
+    end
+
+    def org_footnote_def_regexp
+      /^\[fn:(.+?)(:(.*))?\]( (.+))?/
+    end
+
+    def org_angle_link_text_regexp
+      /<(\w+:[^\]\s<>]+)>/
     end
   end
 end

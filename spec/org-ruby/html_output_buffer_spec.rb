@@ -89,9 +89,6 @@ module Orgmode
           end
         end
 
-        xcontext 'when tag is table' do
-        end
-
         context 'when called for second time' do
           before(:each) do
             buffer.push_mode(mode, indent)

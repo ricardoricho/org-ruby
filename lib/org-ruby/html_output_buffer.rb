@@ -319,7 +319,7 @@ module Orgmode
       str.gsub! /@@html:(<[^<>\n]*>)@@/, "\\1"
     end
 
-    def quote_tags str
+    def quote_tags(str)
       str.gsub /(<[^<>\n]*>)/, "@@html:\\1@@"
     end
 
