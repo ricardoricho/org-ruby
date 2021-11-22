@@ -1,13 +1,11 @@
 require 'logger'
 
 module Orgmode
-
   # The OutputBuffer is used to accumulate multiple lines of orgmode
   # text, and then emit them to the output all in one go. The class
   # will do the final textile substitution for inline formatting and
   # add a newline character prior emitting the output.
   class OutputBuffer
-
     # This is the overall output buffer
     attr_reader :output, :mode_stack, :list_indent_stack
 
@@ -34,32 +32,24 @@ module Orgmode
       # regexp module
       @re_help = RegexpHelper.new
       @logger = Logger.new(STDERR)
-      if ENV['DEBUG'] || $DEBUG
-        @logger.level = Logger::DEBUG
-      else
-        @logger.level = Logger::WARN
-      end
+      @logger.level = Logger::INFO
     end
 
     def current_mode
       mode_stack.last
     end
 
-    def push_mode(mode, indent, properties={})
+    def push_mode(mode, indent, _properties = {})
       mode_stack.push(mode)
       # Here seem that inherit buffers do their magic.
       list_indent_stack.push(indent)
     end
 
-    def pop_mode(mode=nil)
+    def pop_mode(_mode = nil)
       mode_stack.pop
     end
 
     def insert(line)
-      # Prepares the output buffer to receive content from a line.
-      # As a side effect, this may flush the current accumulated text.
-      @logger.debug "Looking at #{line.paragraph_type}|#{line.assigned_paragraph_type}(#{current_mode}) : #{line.to_s}"
-
       # We try to get the lang from #+BEGIN_SRC blocks
       @block_lang = line.block_lang if line.begin_block?
       unless should_accumulate_output?(line)
@@ -77,40 +67,38 @@ module Orgmode
     def line_get_content(line)
       # Adds the current line to the output buffer
       case
-      when line.assigned_paragraph_type == :comment
+      when skip_buffer(line)
         # Don't add to buffer
-        ""
+        ''
       when line.title?
         line.output_text
-      when line.raw_text?
-        # This case is for html buffer, because buffer_tag is a method
-        if line.raw_text_tag == buffer_tag
-          "\n#{line.output_text}"
-        else
-          ""
-        end
-      when preserve_whitespace?
-        if line.block_type
-          ""
-        else
-          "\n#{line.output_text}"
-        end
+      when line.raw_text? && line.raw_text_tag != buffer_tag
+        ''
+      when line.raw_text? && line.raw_text_tag == buffer_tag
+        "\n#{line.output_text}"
+      when preserve_whitespace? && line.block_type
+        ''
+      when preserve_whitespace? && !line.block_type
+        "\n#{line.output_text}"
       when line.assigned_paragraph_type == :code
         # If the line is contained within a code block but we should
         # not preserve whitespaces, then we do nothing.
-        ""
+        ''
       when line.is_a?(Headline)
         add_line_attributes(line)
         "\n#{line.output_text.strip}"
 
-      when ([:definition_term, :list_item, :table_row, :table_header,
-             :horizontal_rule].include? line.paragraph_type)
-
+      when %i[definition_term list_item table_row table_header
+              horizontal_rule].include?(line.paragraph_type)
         "\n#{line.output_text.strip}"
       when line.paragraph_type == :paragraph
         "\n""#{buffer_indentation}#{line.output_text.strip}"
-      else ""
+      else ''
       end
+    end
+
+    def skip_buffer(line)
+      line.assigned_paragraph_type == :comment
     end
 
     def html_buffer_code_block_indent(line)
@@ -124,14 +112,11 @@ module Orgmode
     def get_next_headline_number(level)
       raise "Headline level not valid: #{level}" if level <= 0
 
-      while level > @headline_number_stack.length do
-        @headline_number_stack.push 0
-      end
-      while level < @headline_number_stack.length do
-        @headline_number_stack.pop
-      end
+      @headline_number_stack.push(0) while level > @headline_number_stack.length
+      @headline_number_stack.pop while level < @headline_number_stack.length
+
       @headline_number_stack[level - 1] += 1
-      @headline_number_stack.join(".")
+      @headline_number_stack.join('.')
     end
 
     # Gets the current list indent level.
@@ -141,11 +126,11 @@ module Orgmode
 
     # Test if we're in an output mode in which whitespace is significant.
     def preserve_whitespace?
-      [:example, :inline_example, :raw_text, :src].include? current_mode
+      %i[example inline_example raw_text src].include? current_mode
     end
 
     def do_custom_markup
-      if File.exists? @options[:markup_file]
+      if File.exist?(@options[:markup_file])
         load_custom_markup
         if @custom_blocktags.empty?
           no_valid_markup_found
@@ -159,30 +144,35 @@ module Orgmode
 
     def load_custom_markup
       require 'yaml'
-      self.class.to_s == 'Orgmode::MarkdownOutputBuffer' ? filter = '^MarkdownMap$' : filter = '^HtmlBlockTag$|^Tags$'
-      @custom_blocktags = YAML.load_file(@options[:markup_file]).select {|k| k.to_s.match(filter) }
+      filter = if self.class.to_s == 'Orgmode::MarkdownOutputBuffer'
+                 '^MarkdownMap$'
+               else
+                 '^HtmlBlockTag$|^Tags$'
+               end
+      @custom_blocktags = YAML.load_file(@options[:markup_file]).select do |k|
+        k.to_s.match(filter)
+      end
     end
 
     def set_custom_markup
-      @custom_blocktags.keys.each do |k|
-        @custom_blocktags[k].each {|key,v| self.class.const_get(k.to_s)[key] = v if self.class.const_get(k.to_s).key? key}
+      @custom_blocktags.each_key do |k|
+        @custom_blocktags[k].each do |key, v|
+          self.class.const_get(k.to_s)[key] = v if self.class.const_get(k.to_s).key?(key)
+        end
       end
     end
 
     def no_valid_markup_found
-      self.class.to_s == 'Orgmode::MarkdownOutputBuffer' ? tags = 'MarkdownMap' : tags = 'HtmlBlockTag or Tags'
-      @logger.debug "Setting Custom Markup failed. No #{tags} key where found in: #{@options[:markup_file]}."
-      @logger.debug "Continuing export with default markup."
+      self.class.to_s == 'Orgmode::MarkdownOutputBuffer' ? 'MarkdownMap' : 'HtmlBlockTag or Tags'
     end
 
     def no_custom_markup_file_exists
-      @logger.debug "Setting Custom Markup failed. No such file exists: #{@options[:markup_file]}."
-      @logger.debug "Continuing export with default tags."
+      nil
     end
 
     protected
 
-    attr_reader :block_lang, :list_indent_stack
+    attr_reader :block_lang
 
     def indentation_level
       list_indent_stack.length - 1
@@ -197,16 +187,15 @@ module Orgmode
     private
 
     def mode_is_heading?(mode)
-      [:heading1, :heading2, :heading3,
-       :heading4, :heading5, :heading6].include? mode
+      %i[heading1 heading2 heading3 heading4 heading5 heading6].include?(mode)
     end
 
     def mode_is_block?(mode)
-      [:quote, :center, :example, :src].include? mode
+      %i[quote center example src].include?(mode)
     end
 
     def mode_is_code?(mode)
-      [:example, :src].include? mode
+      %i[example src].include?(mode)
     end
 
     def boundary_of_block?(line)
@@ -225,20 +214,17 @@ module Orgmode
                    current_mode == :raw_text)
 
       # End-block line closes every mode within block
-      if line.end_block? and @mode_stack.include? line.paragraph_type
+      if line.end_block? && @mode_stack.include?(line.paragraph_type)
         pop_mode until current_mode == line.paragraph_type
       end
 
-      if ((not line.paragraph_type == :blank) or
-          @output_type == :blank)
+      if line.paragraph_type != :blank || @output_type == :blank
         # Close previous tags on demand. Two blank lines close all tags.
-        while ((not @list_indent_stack.empty?) and
-               @list_indent_stack.last >= line.indent and
-               # Don't allow an arbitrary line to close block
-               (not mode_is_block? current_mode))
+        while !@list_indent_stack.empty? && @list_indent_stack.last >= line.indent &&
+              # Don't allow an arbitrary line to close block
+              !mode_is_block?(current_mode)
           # Item can't close its major mode
-          if (@list_indent_stack.last == line.indent and
-              line.major_mode == current_mode)
+          if @list_indent_stack.last == line.indent && line.major_mode == current_mode
             break
           else
             pop_mode
@@ -247,14 +233,14 @@ module Orgmode
       end
 
       # Special case: Only end-block line closes block
-      pop_mode if line.end_block? and line.paragraph_type == current_mode
+      pop_mode if line.end_block? && line.paragraph_type == current_mode
 
-      unless line.paragraph_type == :blank or line.assigned_paragraph_type == :comment
-        if (@list_indent_stack.empty? or
-            @list_indent_stack.last <= line.indent or
-            mode_is_block? current_mode)
+      unless line.paragraph_type == :blank || line.assigned_paragraph_type == :comment
+        if (@list_indent_stack.empty? ||
+            @list_indent_stack.last <= line.indent ||
+            mode_is_block?(current_mode))
           # Opens the major mode of line if it exists
-          if @list_indent_stack.last != line.indent or mode_is_block? current_mode
+          if @list_indent_stack.last != line.indent || mode_is_block?(current_mode)
             push_mode(line.major_mode, line.indent, line.properties) if line.major_mode
           end
           # Opens tag that precedes text immediately
@@ -309,10 +295,9 @@ module Orgmode
     end
 
     def buffer_indentation
-      ""
+      ''
     end
 
     def flush!; false; end
-    def output_footnotes!; false; end
-  end                           # class OutputBuffer
-end                             # module Orgmode
+  end
+end
