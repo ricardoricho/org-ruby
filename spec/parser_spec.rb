@@ -342,6 +342,19 @@ EXAMPLE
     end
   end
 
+  describe "Left to right support by" do
+    base_dir = File.join(File.dirname(__FILE__), "html_examples")
+    org_file = File.join(base_dir, "left-to-right.org")
+    html_file = File.join(base_dir, "left-to-right-with-dir.html")
+
+    it 'adds dir="auto" as global attribute' do
+      expected = IO.read(html_file)
+      parser = Orgmode::Parser.new(IO.read(org_file), :left_to_right => 't')
+      actual = parser.to_html
+      expect(actual).to eq(expected)
+    end
+  end
+
   describe "Export to Markdown test cases" do
     data_directory = File.join(File.dirname(__FILE__), "markdown_examples")
     org_files = File.expand_path(File.join(data_directory, "*.org" ))

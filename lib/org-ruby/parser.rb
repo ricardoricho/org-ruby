@@ -44,6 +44,7 @@ module Orgmode
     # that subtree will not get exported.
     def export_exclude_tags
       return Array.new unless @in_buffer_settings["EXPORT_EXCLUDE_TAGS"]
+
       @in_buffer_settings["EXPORT_EXCLUDE_TAGS"].split
     end
 
@@ -77,6 +78,11 @@ module Orgmode
     # only {} mode is currently supported.
     def use_sub_superscripts?
       @options["^"] != "nil"
+    end
+
+    # Support for left to right when buffer or parser option.
+    def left_to_right?
+      @options["left_to_right"] == 't' || @parser_options[:left_to_right]
     end
 
     def initialize_lines(lines)
@@ -343,7 +349,8 @@ module Orgmode
         link_abbrevs: @link_abbrevs,
         skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
         markup_file: @parser_options[:markup_file],
-        footnotes_title: @parser_options[:footnotes_title]
+        footnotes_title: @parser_options[:footnotes_title],
+        left_to_right: left_to_right?
       }
       export_options[:skip_tables] = true unless export_tables?
       output = ''
