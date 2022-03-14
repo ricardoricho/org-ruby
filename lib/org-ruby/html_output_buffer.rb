@@ -289,7 +289,7 @@ module Orgmode
         " style=\"text-align: center\""
       when @options[:decorate_title]
         " class=\"title\""
-      when @options[:left_to_right]
+      when @options[:ltr]
         " dir=\"auto\""
       end
     end

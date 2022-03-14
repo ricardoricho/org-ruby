@@ -82,7 +82,7 @@ module Orgmode
 
     # Support for left to right when buffer or parser option.
     def left_to_right?
-      @options["left_to_right"] == 't' || @parser_options[:left_to_right]
+      @options["ltr"] == 't' || @parser_options[:ltr]
     end
 
     def initialize_lines(lines)
@@ -350,7 +350,7 @@ module Orgmode
         skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
         markup_file: @parser_options[:markup_file],
         footnotes_title: @parser_options[:footnotes_title],
-        left_to_right: left_to_right?
+        ltr: left_to_right?
       }
       export_options[:skip_tables] = true unless export_tables?
       output = ''

@@ -349,7 +349,7 @@ EXAMPLE
 
     it 'adds dir="auto" as global attribute' do
       expected = IO.read(html_file)
-      parser = Orgmode::Parser.new(IO.read(org_file), :left_to_right => 't')
+      parser = Orgmode::Parser.new(IO.read(org_file), :ltr => 't')
       actual = parser.to_html
       expect(actual).to eq(expected)
     end
