@@ -35,6 +35,8 @@ module Orgmode
       @footnotes = {}
       @unclosed_tags = []
 
+      @heading_id = []
+
       # move from output_buffer
       @code_block_indent = nil
 
@@ -191,6 +193,13 @@ module Orgmode
 
 
     def add_line_attributes(headline)
+      if @options[:generate_heading_id]
+        level = headline.level
+        @output.delete_suffix!('>')
+        @heading_id.slice!(level, @heading_id.length - level)
+        @heading_id[level-1]=headline.output_text.downcase.gsub(/\W/, "-")
+        @output << " id=\"" + @heading_id.join("--") + "\">"
+      end
       if @options[:export_heading_number]
         level = headline.level
         headline_level = headline.headline_level
