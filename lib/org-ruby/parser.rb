@@ -350,7 +350,8 @@ module Orgmode
         skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
         markup_file: @parser_options[:markup_file],
         footnotes_title: @parser_options[:footnotes_title],
-        ltr: left_to_right?
+        ltr: left_to_right?,
+        generate_heading_id: @parser_options[:generate_heading_id]
       }
       export_options[:skip_tables] = true unless export_tables?
       output = ''
