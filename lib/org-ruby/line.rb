@@ -27,7 +27,7 @@ module Orgmode
     # In case more contextual info is needed we can put here
     attr_accessor :properties
 
-    def initialize(line, parser=nil, assigned_paragraph_type=nil)
+    def initialize(line, parser = nil, assigned_paragraph_type = nil)
       @parser = parser
       @line = line
       @indent = 0
@@ -41,14 +41,21 @@ module Orgmode
     end
 
     def to_s
-      return @line
+      @line
+    end
+
+    def slugify
+      output_text
+        .downcase
+        .gsub(/\s+/, '-') # replace spaces with -
+        .gsub(/[^a-zA-Z0-9_-]/, '') # remove non-alphanumeric characters
     end
 
     # Tests if a line is a comment.
     def comment?
       return @assigned_paragraph_type == :comment if @assigned_paragraph_type
       return block_type.casecmp("COMMENT") if begin_block? or end_block?
-      return @line =~ /^[ \t]*?#[ \t]/
+      @line =~ /^[ \t]*?#[ \t]/
     end
 
     PropertyDrawerRegexp = /^\s*:(PROPERTIES|END):/i
@@ -182,7 +189,7 @@ module Orgmode
 
     #
     # 1) block delimiters
-    # 2) block type (src, example, html...) 
+    # 2) block type (src, example, html...)
     # 3) switches (e.g. -n -r -l "asdf")
     # 4) header arguments (:hello world)
     #

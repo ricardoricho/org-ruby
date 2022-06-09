@@ -35,8 +35,6 @@ module Orgmode
       @footnotes = {}
       @unclosed_tags = []
 
-      @heading_id = []
-
       # move from output_buffer
       @code_block_indent = nil
 
@@ -52,8 +50,8 @@ module Orgmode
     # put this information in the HTML stream.
     def push_mode(mode, indent, properties={})
       super(mode, indent, properties)
-      return unless html_tags.include?(mode)
-      return if skip_css?(mode)
+      return if !html_tags.include?(mode) || skip_css?(mode)
+
       css_class = get_css_attr(mode)
       push_indentation(@new_paragraph != :start)
 
@@ -193,23 +191,25 @@ module Orgmode
 
 
     def add_line_attributes(headline)
-      if @options[:generate_heading_id]
-        level = headline.level
-        @output.delete_suffix!('>')
-        @heading_id.slice!(level, @heading_id.length - level)
-        @heading_id[level-1]=headline.output_text.downcase.gsub(/\W/, "-")
-        @output << " id=\"" + @heading_id.join("--") + "\">"
-      end
+      level = headline.level
+      add_headline_id(headline)
+
       if @options[:export_heading_number]
-        level = headline.level
         headline_level = headline.headline_level
         heading_number = get_next_headline_number(headline_level)
         @output << "<span class=\"heading-number heading-number-#{level}\">#{heading_number}</span> "
       end
-      if @options[:export_todo] and headline.keyword
+      if @options[:export_todo] && headline.keyword
         keyword = headline.keyword
         @output << "<span class=\"todo-keyword #{keyword}\">#{keyword}</span> "
       end
+    end
+
+    def add_headline_id(line)
+      return unless @options[:generate_heading_id]
+      # Nice hack to "open" the line tag and include the id
+      @output.delete_suffix!('>')
+      @output << " id=\"#{line.slugify}\">"
     end
 
     def html_buffer_code_block_indent(line)

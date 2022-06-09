@@ -71,6 +71,7 @@ module Orgmode
         # Don't add to buffer
         ''
       when line.title?
+        add_headline_id(line)
         line.output_text
       when line.raw_text? && line.raw_text_tag != buffer_tag
         ''
@@ -252,6 +253,10 @@ module Orgmode
 
     def add_line_attributes(headline)
       # Implemented by specific output buffers
+    end
+
+    def add_headline_id(line)
+      # Implement this in output buffers
     end
 
     def output_footnotes!

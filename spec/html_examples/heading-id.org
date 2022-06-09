@@ -1,0 +1,15 @@
+#+TITLE: Heading Id
+
+This is a page testing ="id"= attributes in headlines export
+* This is an id
+
+The previous should has id: ~#this-is-an-id~
+* Neastead
+** Headlines or Head_lines
+*** Should 2 contain
+*** Ids!!
+** Depending on
+*** The
+*** ¿Level?
+* They are
+* Defined

@@ -51,7 +51,7 @@ module Orgmode
       @tags = []
       @export_state = :exclude
       @property_drawer = { }
-      if (@line =~ LineRegexp) then
+      if (@line =~ LineRegexp)
         new_offset = (parser && parser.title?) ? offset + 1 : offset
         @level = $&.strip.length + new_offset
         @headline_text = $'.strip
@@ -67,10 +67,13 @@ module Orgmode
       end
     end
 
-    # Override Line.output_text. For a heading, @headline_text
-    # is what we should output.
+    # Override Line.output_text
     def output_text
-      return @headline_text
+      @headline_text
+    end
+
+    def id
+      slugify
     end
 
     # Determines if a line is an orgmode "headline":
@@ -106,5 +109,5 @@ module Orgmode
         @headline_text.sub!(Regexp.new("^#{@keyword}\s*"), "")
       end
     end
-  end                           # class Headline
-end                             # class Orgmode
+  end
+end
