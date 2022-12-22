@@ -31,12 +31,6 @@ module Orgmode
     # Include the property drawer items found for the headline
     attr_accessor :property_drawer
 
-    # This is the regex that matches a line
-    LineRegexp = /^\*+\s+/
-
-    # This matches the tags on a headline
-    TagsRegexp = /\s*:[\w:@]*:\s*$/
-
     # Special keywords allowed at the start of a line.
     Keywords = %w[TODO DONE]
 
@@ -51,16 +45,12 @@ module Orgmode
       @tags = []
       @export_state = :exclude
       @property_drawer = { }
-      if (@line =~ LineRegexp)
+      if (@line =~ RegexpHelper.headline)
         new_offset = (parser && parser.title?) ? offset + 1 : offset
         @level = $&.strip.length + new_offset
         @headline_text = $'.strip
-        if (@headline_text =~ TagsRegexp) then
-          @tags = $&.split(/:/)              # split tag text on semicolon
-          @tags.delete_at(0)                 # the first item will be empty; discard
-          @headline_text.gsub!(TagsRegexp, "") # Removes the tags from the headline
-        end
         @keyword = nil
+        remove_tags!
         parse_keywords
       else
         raise "'#{line}' is not a valid headline"
@@ -76,10 +66,18 @@ module Orgmode
       slugify
     end
 
+    def remove_tags!
+      match = RegexpHelper.tags.match(@headline_text)
+      return nil unless match
+
+      @tags = match[:tags].split(':')
+      @headline_text.slice!($&)
+    end
+
     # Determines if a line is an orgmode "headline":
     # A headline begins with one or more asterisks.
     def self.headline?(line)
-      line =~ LineRegexp
+      line =~ RegexpHelper.headline
     end
 
     # Determines if a headline has the COMMENT keyword.
@@ -97,14 +95,14 @@ module Orgmode
       level - title_offset
     end
 
-    ######################################################################
+
     private
 
     def parse_keywords
       re = @parser.custom_keyword_regexp if @parser
       re ||= KeywordsRegexp
       words = @headline_text.split
-      if words.length > 0 && words[0] =~ re then
+      if words.length > 0 && words[0] =~ re
         @keyword = words[0]
         @headline_text.sub!(Regexp.new("^#{@keyword}\s*"), "")
       end
