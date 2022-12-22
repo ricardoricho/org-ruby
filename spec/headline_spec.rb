@@ -12,7 +12,9 @@ describe Orgmode::Headline do
   end
 
   it "should reject improper initialization" do
-    expect { Orgmode::Headline.new " tricked**" }.to raise_error
+    expect {
+      Orgmode::Headline.new " tricked**"
+    }.to raise_error(RuntimeError)
   end
 
   it "should properly determine headline level" do
@@ -61,4 +63,3 @@ describe Orgmode::Headline do
     expect(h.comment_headline?).to_not be_nil
   end
 end
-

@@ -4,10 +4,13 @@ require 'pathname'
 describe Orgmode::Parser do
   it "should open ORG files" do
     parser = Orgmode::Parser.load(RememberFile)
+    expect(parser).not_to be_nil
   end
 
   it "should fail on non-existant files" do
-    expect { parser = Orgmode::Parser.load("does-not-exist.org") }.to raise_error
+    expect {
+      Orgmode::Parser.load("does-not-exist.org")
+    }.to raise_error(Errno::ENOENT)
   end
 
   it "should load all of the lines" do
