@@ -74,12 +74,6 @@ module Orgmode
       @headline_text.slice!($&)
     end
 
-    # Determines if a line is an orgmode "headline":
-    # A headline begins with one or more asterisks.
-    def self.headline?(line)
-      line =~ RegexpHelper.headline
-    end
-
     # Determines if a headline has the COMMENT keyword.
     def comment_headline?
       @headline_text =~ CommentHeadlineRegexp

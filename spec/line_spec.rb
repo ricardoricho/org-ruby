@@ -16,6 +16,20 @@ describe Orgmode::Line do
     end
   end
 
+  describe '#headline?' do
+    it "recognize headlines that start with asterisks" do
+      line = Orgmode::Line.new("*** test\n")
+      expect(line.headline?).to be_truthy
+    end
+
+    it "reject lines without asteriks at the beginning" do
+      line = Orgmode::Line.new("  nope!")
+      expect(line.headline?).to be_nil
+      line = Orgmode::Line.new("  tricked you!!!***")
+      expect(line.headline?).to be_nil
+    end
+  end
+
   it "should tell blank lines" do
     blank = ["", " ", "\t", "\n", "  \t\t\n\n"]
     blank.each do |b|

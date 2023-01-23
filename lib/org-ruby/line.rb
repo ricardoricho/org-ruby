@@ -54,8 +54,15 @@ module Orgmode
     # Tests if a line is a comment.
     def comment?
       return @assigned_paragraph_type == :comment if @assigned_paragraph_type
-      return block_type.casecmp("COMMENT") if begin_block? or end_block?
+      return block_type.casecmp("COMMENT") if begin_block? || end_block?
+
       @line =~ /^[ \t]*?#[ \t]/
+    end
+
+    # Determines if a line is an orgmode "headline":
+    # A headline begins with one or more asterisks.
+    def headline?
+      RegexpHelper.headline.match(to_s)
     end
 
     PropertyDrawerRegexp = /^\s*:(PROPERTIES|END):/i
