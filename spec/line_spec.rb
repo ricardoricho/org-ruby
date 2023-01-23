@@ -86,11 +86,27 @@ describe Orgmode::Line do
     expect(Orgmode::Line.new("   a").indent).to eql(3)
   end
 
-  it "should return paragraph type" do
-    expect(Orgmode::Line.new("").paragraph_type).to eql(:blank)
-    expect(Orgmode::Line.new("1. foo").paragraph_type).to eql(:list_item)
-    expect(Orgmode::Line.new("- [ ] checkbox").paragraph_type).to eql(:list_item)
-    expect(Orgmode::Line.new("hello!").paragraph_type).to eql(:paragraph)
+  describe '#paragraph_type' do
+    context 'when line is empty: ""' do
+      let(:line) { Orgmode::Line.new("") }
+
+      it { expect(line.paragraph_type).to be :blank }
+    end
+    context 'when line is a numbered list: 31. list' do
+      let(:line) { Orgmode::Line.new("31. foo") }
+
+      it { expect(line.paragraph_type).to be :list_item }
+    end
+    context 'when line is a list item: - [] list' do
+      let(:line) { Orgmode::Line.new("- [ ] checkbox") }
+
+      it { expect(line.paragraph_type).to be :list_item }
+    end
+    context 'when line is a normal line' do
+      let(:line) { Orgmode::Line.new("hello!") }
+
+      it { expect(line.paragraph_type).to be :paragraph}
+    end
   end
 
   it "should recognize BEGIN and END comments" do
