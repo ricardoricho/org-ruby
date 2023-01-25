@@ -139,7 +139,7 @@ module Orgmode
           set_custom_markup
         end
       else
-        no_custom_markup_file_exists
+        no_custom_markup_file_exist
       end
     end
 
@@ -167,7 +167,7 @@ module Orgmode
       self.class.to_s == 'Orgmode::MarkdownOutputBuffer' ? 'MarkdownMap' : 'HtmlBlockTag or Tags'
     end
 
-    def no_custom_markup_file_exists
+    def no_custom_markup_file_exist
       nil
     end
 

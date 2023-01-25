@@ -58,10 +58,10 @@ describe Orgmode::Line do
   end
 
   it "should recognize table rows" do
-   expect(Orgmode::Line.new("| One   | Two   | Three |").table_row?).to be_truthy
-   expect(Orgmode::Line.new("  |-------+-------+-------|\n").table_separator?).to be_truthy
-   expect(Orgmode::Line.new("| Four  | Five  | Six   |").table_row?).to be_truthy
-   expect(Orgmode::Line.new("| Seven | Eight | Nine  |").table_row?).to be_truthy
+    expect(Orgmode::Line.new("| One   | Two   | Three |").table_row?).to be_truthy
+    expect(Orgmode::Line.new("  |-------+-------+-------|\n").table_separator?).to be_truthy
+    expect(Orgmode::Line.new("| Four  | Five  | Six   |").table_row?).to be_truthy
+    expect(Orgmode::Line.new("| Seven | Eight | Nine  |").table_row?).to be_truthy
   end
 
   it "should recognize indentation" do
@@ -125,7 +125,7 @@ describe Orgmode::Line do
     }
 
     cases.each_pair do |example, expected|
-      it "should recognize #{example}" do 
+      it "should recognize #{example}" do
         line = Orgmode::Line.new example
         expect(line.block_header_arguments).to eq(expected)
       end
@@ -143,7 +143,7 @@ describe Orgmode::Line do
     }
 
     cases.each_pair do |example, expected|
-      it "should accept '#{example}' with assigned type #{expected}" do 
+      it "should accept '#{example}' with assigned type #{expected}" do
         line = Orgmode::Line.new(example, nil, expected)
         expect(line.assigned_paragraph_type).to eq(expected)
       end
@@ -172,12 +172,12 @@ describe Orgmode::Line do
 
   it "should reject ill-formed settings" do
     cases = [
-             "##+ARCHIVE: blah",
-             "#CATEGORY: foo",
-             "",
-             "\n",
-             "   #+BEGIN_EXAMPLE:\n"
-            ]
+      "##+ARCHIVE: blah",
+      "#CATEGORY: foo",
+      "",
+      "\n",
+      "   #+BEGIN_EXAMPLE:\n"
+    ]
 
     cases.each do |c|
       l = Orgmode::Line.new c
@@ -187,15 +187,15 @@ describe Orgmode::Line do
 
   context "at the start of a results block" do
     cases = [
-             "#+RESULTS: hello-world",
-             "#+RESULTS: ",
-             "#+RESULTS:",
-             "#+results: HELLO-WORLD",
-             "#+results: ",
-             "#+results:"
-            ]
+      "#+RESULTS: hello-world",
+      "#+RESULTS: ",
+      "#+RESULTS:",
+      "#+results: HELLO-WORLD",
+      "#+results: ",
+      "#+results:"
+    ]
     cases.each do |c|
-      it "should recognize #{c}" do 
+      it "should recognize #{c}" do
         l = Orgmode::Line.new(c).start_of_results_code_block?
         expect(l).to be_truthy
       end
