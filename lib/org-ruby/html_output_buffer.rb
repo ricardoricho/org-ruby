@@ -264,7 +264,7 @@ module Orgmode
     def do_custom_markup
       file = options[:markup_file]
       return unless file
-      return no_custom_markup_file_exists unless File.exists?(file)
+      return no_custom_markup_file_exist unless File.exist?(file)
 
       @custom_blocktags = load_custom_markup(file)
       @custom_blocktags.empty? && no_valid_markup_found ||
