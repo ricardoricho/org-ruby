@@ -38,5 +38,25 @@ module Orgmode
       it { expect(regexp.tags).not_to match ":@tag :" }
       it { expect(regexp.tags).not_to match "@tag:" }
     end
+
+    describe '.drawer' do
+      it { expect(regexp.drawer).to match ':Dra-Wer:' }
+      it { expect(regexp.drawer).not_to match ':drawer:p' }
+      it 'capture drawer :name' do
+        match = regexp.drawer.match(':name:')
+        expect(match[:name]).to eq 'name'
+      end
+    end
+
+    describe '.property_item' do
+      it { expect(regexp.property_item).to match ':key:value' }
+      it { expect(regexp.property_item).to match ':key: value' }
+      it 'capture key and value' do
+        match = regexp.property_item.match ':key: 200-23-2 +'
+        expect(match[:key]).to eq 'key'
+        expect(match[:value]).to eq '200-23-2 +'
+      end
+
+    end
   end
 end

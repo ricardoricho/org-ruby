@@ -221,7 +221,7 @@ module Orgmode
         end
 
         if (mode == :property_drawer) && @current_headline
-          @current_headline.property_drawer[line.property_drawer_item.first] = line.property_drawer_item.last
+          @current_headline.store_property(line.property_drawer_item?)
         end
 
         unless mode == :comment

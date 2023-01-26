@@ -7,5 +7,13 @@ module Orgmode
     def tags
       /\s*:(?<tags>[\w:@]+):\s*$/
     end
+
+    def drawer
+      /^\s*:(?<name>[\w\-]+):$/
+    end
+
+    def property_item
+      /^\s*:(?<key>[\w\-]+):\s*(?<value>.*)$/
+    end
   end
 end

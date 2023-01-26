@@ -65,30 +65,18 @@ module Orgmode
       RegexpHelper.headline.match(to_s)
     end
 
-    PropertyDrawerRegexp = /^\s*:(PROPERTIES|END):/i
-
     def property_drawer_begin_block?
-      @line =~ PropertyDrawerRegexp && $1 =~ /PROPERTIES/
+      match = RegexpHelper.drawer.match(@line)
+      match && match[:name].downcase == 'properties'
     end
 
     def property_drawer_end_block?
-      @line =~ PropertyDrawerRegexp && $1 =~ /END/
+      match = RegexpHelper.drawer.match(@line)
+      match && match[:name].downcase == 'end'
     end
-
-    def property_drawer?
-      check_assignment_or_regexp(:property_drawer, PropertyDrawerRegexp)
-    end
-
-    PropertyDrawerItemRegexp = /^\s*:([0-9A-Za-z_\-]+):\s*(.*)$/i
 
     def property_drawer_item?
-      @line =~ PropertyDrawerItemRegexp
-    end
-
-    def property_drawer_item
-      @line =~ PropertyDrawerItemRegexp
-
-      [$1, $2]
+      RegexpHelper.property_item.match(@line)
     end
 
     # Tests if a line contains metadata instead of actual content.

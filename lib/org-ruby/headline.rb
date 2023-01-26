@@ -74,6 +74,10 @@ module Orgmode
       @headline_text.slice!($&)
     end
 
+    def store_property(property)
+      @property_drawer.store(property[:key], property[:value])
+    end
+
     # Determines if a headline has the COMMENT keyword.
     def comment_headline?
       @headline_text =~ CommentHeadlineRegexp
@@ -81,7 +85,7 @@ module Orgmode
 
     # Overrides Line.paragraph_type.
     def paragraph_type
-      :"heading#{@level}"
+      "heading#{@level}".to_sym
     end
 
     def headline_level
