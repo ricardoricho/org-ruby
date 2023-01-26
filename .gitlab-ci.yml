@@ -3,6 +3,13 @@ image: ruby
 # Functions that should be executed before the build script is run
 before_script:
   - bundle install
+
+specs:
+  script:
+    - bundle exec rspec
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
 pages:
   script:
     - bundle exec rspec

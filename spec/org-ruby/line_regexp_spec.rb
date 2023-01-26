@@ -46,15 +46,6 @@ module Orgmode
       it { expect(regexp.headline).not_to match "\t\t * Headline" }
       it { expect(regexp.headline).not_to match " Headline" }
       it { expect(regexp.headline).not_to match " Headline **" }
-
-      # should reject improper initialization
-      # should properly determine headline level
-      # should properly determine headline level with offset
-      # should find simple headline text
-      # should understand tags
-      # should understand a single tag
-      # should understand keywords
-      # should recognize headlines marked as COMMENT
     end
 
     describe '.horizontal_rule' do
