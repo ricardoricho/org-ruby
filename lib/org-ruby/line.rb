@@ -81,7 +81,7 @@ module Orgmode
 
     # Tests if a line contains metadata instead of actual content.
     def metadata?
-      check_assignment_or_regexp(:metadata, /^\s*(CLOCK|DEADLINE|START|CLOSED|SCHEDULED):/)
+      check_assignment_or_regexp(:metadata, RegexpHelper.metadata)
     end
 
     def nonprinting?
@@ -89,7 +89,7 @@ module Orgmode
     end
 
     def blank?
-      check_assignment_or_regexp(:blank, /^\s*$/)
+      check_assignment_or_regexp(:blank, RegexpHelper.blank)
     end
 
     def plain_list?

@@ -7,11 +7,28 @@ module Orgmode
     end
     let(:regexp) { DummyRegexp.new }
 
+    describe '.blank' do
+      it { expect(regexp.blank).to match '' }
+      it { expect(regexp.blank).to match '  ' }
+      it { expect(regexp.blank).to match "\t" }
+      it { expect(regexp.blank).to match "\r\t \n" }
+      it { expect(regexp.blank).not_to match "_" }
+    end
+
     describe '.comment' do
       it { expect(regexp.comment).to match '# comment' }
       it { expect(regexp.comment).to match ' # comment' }
       it { expect(regexp.comment).to match "\t #\t comment"}
       it { expect(regexp.comment).not_to match "#comment"}
+    end
+
+    describe '.drawer' do
+      it { expect(regexp.drawer).to match ':Dra-Wer:' }
+      it { expect(regexp.drawer).not_to match ':drawer:p' }
+      it 'capture drawer :name' do
+        match = regexp.drawer.match(':name:')
+        expect(match[:name]).to eq 'name'
+      end
     end
 
     describe '.headline' do
@@ -30,8 +47,24 @@ module Orgmode
       # should understand a single tag
       # should understand keywords
       # should recognize headlines marked as COMMENT
-
     end
+
+    describe '.metadata' do
+      it { expect(regexp.metadata).to match ' CLOCK:' }
+      it { expect(regexp.metadata).to match ' DEADLINE:' }
+      it { expect(regexp.metadata).to match ' START:' }
+      it { expect(regexp.metadata).to match ' CLOSED:' }
+      it { expect(regexp.metadata).to match ' SCHEDULED:' }
+    end
+
+    describe '.property_item' do
+      it { expect(regexp.property_item).to match ':key:value' }
+      it { expect(regexp.property_item).to match ':key: value' }
+      it 'capture key and value' do
+        match = regexp.property_item.match ':key: 200-23-2 +'
+        expect(match[:key]).to eq 'key'
+        expect(match[:value]).to eq '200-23-2 +'
+      end
 
     describe '.tags' do
       it { expect(regexp.tags).to match ":tag:" }
@@ -45,24 +78,6 @@ module Orgmode
       it { expect(regexp.tags).not_to match ":@tag :" }
       it { expect(regexp.tags).not_to match "@tag:" }
     end
-
-    describe '.drawer' do
-      it { expect(regexp.drawer).to match ':Dra-Wer:' }
-      it { expect(regexp.drawer).not_to match ':drawer:p' }
-      it 'capture drawer :name' do
-        match = regexp.drawer.match(':name:')
-        expect(match[:name]).to eq 'name'
-      end
-    end
-
-    describe '.property_item' do
-      it { expect(regexp.property_item).to match ':key:value' }
-      it { expect(regexp.property_item).to match ':key: value' }
-      it 'capture key and value' do
-        match = regexp.property_item.match ':key: 200-23-2 +'
-        expect(match[:key]).to eq 'key'
-        expect(match[:value]).to eq '200-23-2 +'
-      end
     end
   end
 end
