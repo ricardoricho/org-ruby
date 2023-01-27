@@ -7,6 +7,13 @@ module Orgmode
     end
     let(:regexp) { DummyRegexp.new }
 
+    describe '.comment' do
+      it { expect(regexp.comment).to match '# comment' }
+      it { expect(regexp.comment).to match ' # comment' }
+      it { expect(regexp.comment).to match "\t #\t comment"}
+      it { expect(regexp.comment).not_to match "#comment"}
+    end
+
     describe '.headline' do
       # should recognize headlines that start with asterisks
       it { expect(regexp.headline).to match "* Headline" }
@@ -56,7 +63,6 @@ module Orgmode
         expect(match[:key]).to eq 'key'
         expect(match[:value]).to eq '200-23-2 +'
       end
-
     end
   end
 end

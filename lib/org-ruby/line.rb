@@ -56,7 +56,7 @@ module Orgmode
       return @assigned_paragraph_type == :comment if @assigned_paragraph_type
       return block_type.casecmp("COMMENT") if begin_block? || end_block?
 
-      @line =~ /^[ \t]*?#[ \t]/
+      RegexpHelper.comment.match(@line)
     end
 
     # Determines if a line is an orgmode "headline":
