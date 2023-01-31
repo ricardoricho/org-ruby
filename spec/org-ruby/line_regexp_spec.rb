@@ -49,6 +49,39 @@ module Orgmode
       # should recognize headlines marked as COMMENT
     end
 
+    describe '.list_description' do
+      # Description list items are unordered list items,
+      # and contain the separator ‘::’ to distinguish the description term
+      # from the description.
+      it { expect(regexp.list_description).to match ' - description :: term' }
+      it { expect(regexp.list_description).to match ' + description :: term' }
+      it { expect(regexp.list_description).to match ' * description :: term' }
+    end
+
+    describe '.list_ordered' do
+      # Ordered list items start with a numeral followed by either a period or a
+      # right parenthesis, such as ‘1.’ or ‘1)’.
+      it { expect(regexp.list_ordered).to match '33. item' }
+      it { expect(regexp.list_ordered).to match ' 102) item' }
+      it { expect(regexp.list_ordered).not_to match ' 2.item' }
+      it { expect(regexp.list_ordered).not_to match ' 10)item' }
+    end
+
+    describe '.list_ordered_continue' do
+      # If you want a list to start with a different value—e.g.,
+      # 20—start the text of the item with ‘[@20]’12.
+      it { expect(regexp.list_ordered_continue).to match '[@20] item' }
+      it { expect(regexp.list_ordered_continue).to match '[@20] item' }
+    end
+
+    describe '.list_undordered' do
+      # Unordered list items start with ‘-’, ‘+’, or ‘*’ as bullets.
+      it { expect(regexp.list_unordered).to match '- list' }
+      it { expect(regexp.list_unordered).to match '+ list' }
+      it { expect(regexp.list_unordered).to match ' * list' }
+      it { expect(regexp.list_unordered).not_to match '* list' }
+    end
+
     describe '.metadata' do
       it { expect(regexp.metadata).to match ' CLOCK:' }
       it { expect(regexp.metadata).to match ' DEADLINE:' }
@@ -65,6 +98,7 @@ module Orgmode
         expect(match[:key]).to eq 'key'
         expect(match[:value]).to eq '200-23-2 +'
       end
+    end
 
     describe '.tags' do
       it { expect(regexp.tags).to match ":tag:" }
@@ -77,7 +111,6 @@ module Orgmode
       it { expect(regexp.tags).not_to match ":@tag " }
       it { expect(regexp.tags).not_to match ":@tag :" }
       it { expect(regexp.tags).not_to match "@tag:" }
-    end
     end
   end
 end

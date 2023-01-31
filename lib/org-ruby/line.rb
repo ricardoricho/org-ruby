@@ -96,45 +96,39 @@ module Orgmode
       ordered_list? or unordered_list? or definition_list?
     end
 
-    UnorderedListRegexp = /^\s*(-|\+|\s+[*])\s+/
-
     def unordered_list?
-      check_assignment_or_regexp(:unordered_list, UnorderedListRegexp)
+      check_assignment_or_regexp(:unordered_list, RegexpHelper.list_unordered)
     end
 
     def strip_unordered_list_tag
-      @line.sub(UnorderedListRegexp, "")
+      @line.sub(RegexpHelper.list_unordered, "")
     end
-
-    DefinitionListRegexp = /^\s*(-|\+|\s+[*])\s+(.*\s+|)::($|\s+)/
 
     def definition_list?
-      check_assignment_or_regexp(:definition_list, DefinitionListRegexp)
+      check_assignment_or_regexp(:definition_list,
+                                 RegexpHelper.list_description)
     end
-
-    OrderedListRegexp = /^\s*\d+(\.|\))\s+/
 
     def ordered_list?
-      check_assignment_or_regexp(:ordered_list, OrderedListRegexp)
+      check_assignment_or_regexp(:ordered_list, RegexpHelper.list_ordered)
     end
 
-    ContinuedOrderedListRegexp = /^\[@(\d+)\]\s+/
-
     def strip_ordered_list_tag
-      line = @line.sub(OrderedListRegexp, "")
-      if line =~ ContinuedOrderedListRegexp
-        line = line.sub(ContinuedOrderedListRegexp, "")
+      line = @line.sub(RegexpHelper.list_ordered, "")
+      if line =~ RegexpHelper.list_ordered_continue
+        line = line.sub(RegexpHelper.list_ordered_continue, "")
       end
-      return line
+      line
     end
 
     def extract_properties
-      if @line =~ OrderedListRegexp
-        line_without_number =  @line.sub(OrderedListRegexp, "")
-        if line_without_number =~ ContinuedOrderedListRegexp
+      if @line =~ RegexpHelper.list_ordered
+        line_without_number =  @line.sub(RegexpHelper.list_ordered, "")
+        if line_without_number =~ RegexpHelper.list_ordered_continue
           # Extract the start of the ordered list and store it in
           # properties
-          @properties["li"] = line_without_number.match(ContinuedOrderedListRegexp)[1]
+          @properties["li"] =
+            line_without_number.match(RegexpHelper.list_ordered_continue)[1]
         end
       end
     end
@@ -152,7 +146,7 @@ module Orgmode
       return strip_unordered_list_tag if unordered_list?
       return @line.sub(InlineExampleRegexp, "") if inline_example?
       return strip_raw_text_tag if raw_text?
-      return @line
+      @line
     end
 
     def plain_text?
