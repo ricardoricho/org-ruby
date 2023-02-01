@@ -15,6 +15,14 @@ module Orgmode
       it { expect(regexp.blank).not_to match "_" }
     end
 
+    describe '.block' do
+      it { expect(regexp.block).to match ' #+begin_src' }
+      it { expect(regexp.block).to match ' #+begin_block -s -a' }
+      it { expect(regexp.block).to match ' #+end_block :foo' }
+      it { expect(regexp.block).to match ' #+end_block -s :foo' }
+      it { expect(regexp.block).to match ' #+end_block' }
+    end
+
     describe '.comment' do
       it { expect(regexp.comment).to match '# comment' }
       it { expect(regexp.comment).to match ' # comment' }

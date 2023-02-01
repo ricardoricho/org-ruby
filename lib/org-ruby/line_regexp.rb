@@ -4,6 +4,15 @@ module Orgmode
       /^\s*$/
     end
 
+    # 1) block delimiters
+    # 2) block type (src, example, html...)
+    # 3) switches (e.g. -n -r -l "asdf")
+    # 4) header arguments (:hello world)
+    def block
+      /^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?\s*([^\":\n]*\"[^\"\n*]*\"[^\":\n]*|[^\":\n]*)?\s*([^\n]*)?/i
+    end
+
+
     # Lines starting with zero or more whitespace characters
     # followed by one ‘#’ and a whitespace are treated as comments
     def comment

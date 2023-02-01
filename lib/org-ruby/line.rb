@@ -169,28 +169,24 @@ module Orgmode
       table_row? or table_separator? or table_header?
     end
 
-    #
-    # 1) block delimiters
-    # 2) block type (src, example, html...)
-    # 3) switches (e.g. -n -r -l "asdf")
-    # 4) header arguments (:hello world)
-    #
-    BlockRegexp = /^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?\s*([^\":\n]*\"[^\"\n*]*\"[^\":\n]*|[^\":\n]*)?\s*([^\n]*)?/i
-
     def begin_block?
-      @line =~ BlockRegexp && $1 =~ /BEGIN/i
+      # @line =~ BlockRegexp && $1 =~ /BEGIN/i
+      match = RegexpHelper.block.match(@line)
+      match && match[1].downcase == 'begin'
     end
 
     def end_block?
-      @line =~ BlockRegexp && $1 =~ /END/i
+      # @line =~ BlockRegexp && $1 =~ /END/i
+      match = RegexpHelper.block.match(@line)
+      match && match[1].downcase == 'end'
     end
 
     def block_type
-      $2 if @line =~ BlockRegexp
+      $2 if RegexpHelper.block.match(@line)
     end
 
     def block_lang
-      $3 if @line =~ BlockRegexp
+      $3 if RegexpHelper.block.match(@line)
     end
 
     def code_block?
@@ -198,13 +194,13 @@ module Orgmode
     end
 
     def block_switches
-      $4 if @line =~ BlockRegexp
+      $4 if RegexpHelper.block.match(@line)
     end
 
     def block_header_arguments
       header_arguments = { }
 
-      if @line =~ BlockRegexp
+      if RegexpHelper.block.match(@line)
         header_arguments_string = $5
         harray = header_arguments_string.split(' ')
         harray.each_with_index do |arg, i|
@@ -358,10 +354,11 @@ module Orgmode
       end
     end
 
+    # Order is important. A definition_list is also an unordered_list
     def determine_major_mode
       @major_mode = \
       case
-      when definition_list? # order is important! A definition_list is also an unordered_list!
+      when definition_list?
         :definition_list
       when ordered_list?
         :ordered_list
@@ -393,7 +390,7 @@ module Orgmode
     #              this regexp.
     def check_assignment_or_regexp(assignment, regexp)
       return @assigned_paragraph_type == assignment if @assigned_paragraph_type
-      return @line =~ regexp
+      @line =~ regexp
     end
-  end                           # class Line
-end                             # module Orgmode
+  end
+end
