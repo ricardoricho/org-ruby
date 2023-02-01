@@ -58,6 +58,13 @@ module Orgmode
       it { expect(regexp.horizontal_rule).not_to match " ---- " }
     end
 
+    describe '.inline_example' do
+      it{ expect(regexp.inline_example).to match ": expamle"}
+      it{ expect(regexp.inline_example).to match " :  expamle"}
+      it{ expect(regexp.inline_example).to match "\t: expamle"}
+      it{ expect(regexp.inline_example).not_to match "inline : expamle"}
+    end
+
     describe '.list_description' do
       # Description list items are unordered list items,
       # and contain the separator ‘::’ to distinguish the description term

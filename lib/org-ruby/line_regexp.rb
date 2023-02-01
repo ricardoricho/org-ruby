@@ -22,6 +22,10 @@ module Orgmode
       /^\s*-{5,}\s*$/
     end
 
+    def inline_example
+      /^\s*:\s/
+    end
+
     def list_description
       /^\s*(-|\+|\s+[*])\s+(.*\s+|)::($|\s+)/
     end

@@ -142,8 +142,9 @@ module Orgmode
     def output_text
       return strip_ordered_list_tag if ordered_list?
       return strip_unordered_list_tag if unordered_list?
-      return @line.sub(InlineExampleRegexp, "") if inline_example?
+      return @line.sub(RegexpHelper.inline_example, "") if inline_example?
       return strip_raw_text_tag if raw_text?
+
       @line
     end
 
@@ -230,12 +231,10 @@ module Orgmode
         !['code', 'none', nil, ''].include?(export_state)
     end
 
-    InlineExampleRegexp = /^\s*:\s/
-
     # Test if the line matches the "inline example" case:
     # the first character on the line is a colon.
     def inline_example?
-      check_assignment_or_regexp(:inline_example, InlineExampleRegexp)
+      check_assignment_or_regexp(:inline_example, RegexpHelper.inline_example)
     end
 
     RawTextRegexp = /^(\s*)#\+(\w+):\s*/
