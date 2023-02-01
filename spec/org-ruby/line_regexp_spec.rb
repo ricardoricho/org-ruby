@@ -49,6 +49,15 @@ module Orgmode
       # should recognize headlines marked as COMMENT
     end
 
+    describe '.horizontal_rule' do
+      # HorizontalRuleRegexp = /^\s*-{5,}\s*$/
+      it { expect(regexp.horizontal_rule).to match "-----" }
+      it { expect(regexp.horizontal_rule).to match "\t------ " }
+      it { expect(regexp.horizontal_rule).to match "---------\t" }
+      it { expect(regexp.horizontal_rule).not_to match "----" }
+      it { expect(regexp.horizontal_rule).not_to match " ---- " }
+    end
+
     describe '.list_description' do
       # Description list items are unordered list items,
       # and contain the separator ‘::’ to distinguish the description term
@@ -98,6 +107,20 @@ module Orgmode
         expect(match[:key]).to eq 'key'
         expect(match[:value]).to eq '200-23-2 +'
       end
+    end
+
+    describe '.table_row' do
+      it { expect(regexp.table_row).to match "\t |" }
+      it { expect(regexp.table_row).to match "\t | table" }
+      it { expect(regexp.table_row).to match "|"}
+      it { expect(regexp.table_row).to match "||"}
+    end
+
+    describe '.table_separator' do
+      it { expect(regexp.table_separator).to match "||" }
+      it { expect(regexp.table_separator).to match "|--|" }
+      it { expect(regexp.table_separator).to match "|++|++" }
+      it { expect(regexp.table_separator).to match "|+-+-+|-" }
     end
 
     describe '.tags' do

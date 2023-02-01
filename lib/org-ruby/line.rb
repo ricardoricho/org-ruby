@@ -133,10 +133,8 @@ module Orgmode
       end
     end
 
-    HorizontalRuleRegexp = /^\s*-{5,}\s*$/
-
     def horizontal_rule?
-      check_assignment_or_regexp(:horizontal_rule, HorizontalRuleRegexp)
+      check_assignment_or_regexp(:horizontal_rule, RegexpHelper.horizontal_rule)
     end
 
     # Extracts meaningful text and excludes org-mode markup,
@@ -154,17 +152,11 @@ module Orgmode
     end
 
     def table_row?
-      # for an org-mode table, the first non-whitespace character is a
-      # | (pipe).
-      check_assignment_or_regexp(:table_row, /^\s*\|/)
+      check_assignment_or_regexp(:table_row, RegexpHelper.table_row)
     end
 
     def table_separator?
-      # an org-mode table separator has the first non-whitespace
-      # character as a | (pipe), then consists of nothing else other
-      # than pipes, hyphens, and pluses.
-
-      check_assignment_or_regexp(:table_separator, /^\s*\|[-\|\+]*\s*$/)
+      check_assignment_or_regexp(:table_separator, RegexpHelper.table_separator)
     end
 
     # Checks if this line is a table header.
