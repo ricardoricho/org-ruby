@@ -322,18 +322,7 @@ module Orgmode
       output_buffer = MarkdownOutputBuffer.new(output, export_options)
 
       translate(@header_lines, output_buffer)
-      @headlines.each do |headline|
-        next if headline.export_state == :exclude
-
-        case headline.export_state
-        when :exclude
-          # NOTHING
-        when :headline_only
-          translate(headline.body_lines[0, 1], output_buffer)
-        when :all
-          translate(headline.body_lines, output_buffer)
-        end
-      end
+      translate_headlines(@headlines, output_buffer)
       output
     end
 
@@ -367,18 +356,7 @@ module Orgmode
 
       # If we've output anything at all, remove the :decorate_title option.
       export_options.delete(:decorate_title) if output.length > 0
-      @headlines.each do |headline|
-        next if headline.export_state == :exclude
-
-        case headline.export_state
-        when :exclude
-          # NOTHING
-        when :headline_only
-          translate(headline.body_lines[0, 1], output_buffer)
-        when :all
-          translate(headline.body_lines, output_buffer)
-        end
-      end
+      translate_headlines(@headlines, output_buffer)
       output << "\n"
 
       return output if @parser_options[:skip_rubypants_pass]
@@ -387,17 +365,27 @@ module Orgmode
       rp.to_html
     end
 
-    # Hack note (another)
     def title?
       !in_buffer_settings['TITLE'].nil?
     end
+
     def title
       in_buffer_settings['TITLE']
     end
-    #ends hack
 
     ######################################################################
     private
+
+    def translate_headlines(headlines, output_buffer)
+      headlines.each do |headline|
+        case headline.export_state
+        when :headline_only
+          translate(headline.body_lines[0, 1], output_buffer)
+        when :all
+          translate(headline.body_lines, output_buffer)
+        end
+      end
+    end
 
     # Converts an array of lines to the appropriate format.
     # Writes the output to +output_buffer+.
