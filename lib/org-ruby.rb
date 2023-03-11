@@ -9,6 +9,8 @@ require 'org-ruby/output_buffer'
 # HTML exporter
 require 'org-ruby/html_output_buffer'
 require 'org-ruby/html_symbol_replace'
+# HTML Highlighter
+require 'org-ruby/highlighter'
 
 # Textile exporter
 require 'org-ruby/textile_output_buffer'

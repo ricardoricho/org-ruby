@@ -1,5 +1,3 @@
-require_relative './highlighter.rb'
-
 module Orgmode
   class HtmlOutputBuffer < OutputBuffer
     HtmlBlockTag = {
