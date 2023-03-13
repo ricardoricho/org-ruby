@@ -12,7 +12,6 @@ module Orgmode
       /^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?\s*([^\":\n]*\"[^\"\n*]*\"[^\":\n]*|[^\":\n]*)?\s*([^\n]*)?/i
     end
 
-
     # Lines starting with zero or more whitespace characters
     # followed by one ‘#’ and a whitespace are treated as comments
     def comment
@@ -65,6 +64,10 @@ module Orgmode
 
     def raw_text
       /^(?<spaces>\s*)#\+(?<keyword>\w+):\s*/
+    end
+
+    def results_start
+      /^\s*#\+RESULTS:\s*(.+)?$/i
     end
 
     # for an org-mode table, the first non-whitespace character is a

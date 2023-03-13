@@ -275,10 +275,8 @@ module Orgmode
       @assigned_paragraph_type == :title
     end
 
-    ResultsBlockStartsRegexp = /^\s*#\+RESULTS:\s*(.+)?$/i
-
     def start_of_results_code_block?
-      @line =~ ResultsBlockStartsRegexp
+      @line =~ RegexpHelper.results_start
     end
 
     LinkAbbrevRegexp = /^\s*#\+LINK:\s*(\w+)\s+(.+)$/i

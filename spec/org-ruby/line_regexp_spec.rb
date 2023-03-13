@@ -146,6 +146,12 @@ module Orgmode
       end
     end
 
+    describe '.results_start' do
+      it { expect(regexp.results_start).to match " #+RESULTS:" }
+      it { expect(regexp.results_start).to match " #+RESULTS: " }
+      it { expect(regexp.results_start).to match " #+RESULTS: spec " }
+    end
+
     describe '.table_row' do
       it { expect(regexp.table_row).to match "\t |" }
       it { expect(regexp.table_row).to match "\t | table" }
