@@ -38,6 +38,10 @@ module Orgmode
       /^\s*:\s/
     end
 
+    def link_abbrev
+      /^\s*#\+LINK:\s*(?<text>\w+)\s+(?<url>.+)$/i
+    end
+
     def list_description
       /^\s*(-|\+|\s+[*])\s+(.*\s+|)::($|\s+)/
     end

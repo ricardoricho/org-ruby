@@ -84,6 +84,16 @@ module Orgmode
       it{ expect(regexp.inline_example).not_to match "inline : expamle"}
     end
 
+    describe '.link_abbrev' do
+      it { expect(regexp.link_abbrev).not_to match "#+LINK: url" }
+      it { expect(regexp.link_abbrev).to match " #+LINK: url description" }
+      it 'caputure url and description' do
+        match = regexp.link_abbrev.match "#+LINK: text url"
+        expect(match[:text]).to eq 'text'
+        expect(match[:url]).to eq 'url'
+      end
+    end
+
     describe '.list_description' do
       # Description list items are unordered list items,
       # and contain the separator ‘::’ to distinguish the description term

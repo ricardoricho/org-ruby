@@ -279,14 +279,13 @@ module Orgmode
       @line =~ RegexpHelper.results_start
     end
 
-    LinkAbbrevRegexp = /^\s*#\+LINK:\s*(\w+)\s+(.+)$/i
-
     def link_abbrev?
-      @line =~ LinkAbbrevRegexp
+      @line =~ RegexpHelper.link_abbrev
     end
 
     def link_abbrev_data
-      [$1, $2] if @line =~ LinkAbbrevRegexp
+      match = RegexpHelper.link_abbrev.match(@line)
+      match && [match[:text], match[:url]]
     end
 
     IncludeFileRegexp = /^\s*#\+INCLUDE:\s*"([^"]+)"(\s+([^\s]+)\s+(.*))?$/i
