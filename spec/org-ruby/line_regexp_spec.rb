@@ -66,6 +66,17 @@ module Orgmode
       it { expect(regexp.horizontal_rule).not_to match " ---- " }
     end
 
+    describe '.in_buffer_setting' do
+      # /^#\+(\w+):\s*(.*)$/
+      it { expect(regexp.in_buffer_setting).to match "#+keyword: value" }
+      it { expect(regexp.in_buffer_setting).not_to match " #+space: beginning" }
+      it 'captures key and value' do
+        match = regexp.in_buffer_setting.match "#+key: value values"
+        expect(match[:key]).to eq 'key'
+        expect(match[:value]).to eq 'value values'
+      end
+    end
+
     describe '.inline_example' do
       it{ expect(regexp.inline_example).to match ": expamle"}
       it{ expect(regexp.inline_example).to match " :  expamle"}

@@ -31,6 +31,10 @@ module Orgmode
       /^\s*-{5,}\s*$/
     end
 
+    def in_buffer_setting
+      /^#\+(?<key>\w+):\s*(?<value>.*)$/
+    end
+
     def inline_example
       /^\s*:\s/
     end

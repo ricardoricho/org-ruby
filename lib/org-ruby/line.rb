@@ -247,8 +247,6 @@ module Orgmode
       @line.sub(RegexpHelper.raw_text) { |match| $1 }
     end
 
-    InBufferSettingRegexp = /^#\+(\w+):\s*(.*)$/
-
     # call-seq:
     #     line.in_buffer_setting?         => boolean
     #     line.in_buffer_setting? { |key, value| ... }
@@ -258,13 +256,16 @@ module Orgmode
     # will get called if the line contains an in-buffer setting with
     # the key and value for the setting.
     def in_buffer_setting?
-      return false if @assigned_paragraph_type && @assigned_paragraph_type != :comment
-      if block_given? then
-        if @line =~ InBufferSettingRegexp
-          yield $1, $2
+      return false if @assigned_paragraph_type &&
+                      @assigned_paragraph_type != :comment
+      match = RegexpHelper.in_buffer_setting.match(@line)
+
+      if block_given?
+        if match
+          yield match[:key], match[:value]
         end
       else
-        @line =~ InBufferSettingRegexp
+        match
       end
     end
 
