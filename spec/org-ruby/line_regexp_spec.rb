@@ -77,6 +77,18 @@ module Orgmode
       end
     end
 
+    describe '.include_file' do
+      it { expect(regexp.include_file).not_to match "#+INCLUDE: " }
+      it { expect(regexp.include_file).to match '#+INCLUDE: "file"' }
+      it 'captures file_path and options' do
+        match = regexp.include_file.match '  #+INCLUDE: "file" src val'
+        expect(match[:file_path]).to eq 'file'
+        expect(match[:options]).to eq ' src val'
+        expect(match[:key]).to eq 'src'
+        expect(match[:value]).to eq 'val'
+      end
+    end
+
     describe '.inline_example' do
       it{ expect(regexp.inline_example).to match ": expamle"}
       it{ expect(regexp.inline_example).to match " :  expamle"}

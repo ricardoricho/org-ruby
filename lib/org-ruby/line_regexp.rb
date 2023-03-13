@@ -34,6 +34,10 @@ module Orgmode
       /^#\+(?<key>\w+):\s*(?<value>.*)$/
     end
 
+    def include_file
+      /^\s*#\+INCLUDE:\s*"(?<file_path>[^"]+)"(?<options>\s+(?<key>[^\s]+)\s+(?<value>.*))?$/i
+    end
+
     def inline_example
       /^\s*:\s/
     end

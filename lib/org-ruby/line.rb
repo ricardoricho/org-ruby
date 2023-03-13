@@ -288,18 +288,18 @@ module Orgmode
       match && [match[:text], match[:url]]
     end
 
-    IncludeFileRegexp = /^\s*#\+INCLUDE:\s*"([^"]+)"(\s+([^\s]+)\s+(.*))?$/i
-
     def include_file?
-      @line =~ IncludeFileRegexp
+      @line =~ RegexpHelper.include_file
     end
 
     def include_file_path
-      File.expand_path $1 if @line =~ IncludeFileRegexp
+      match = RegexpHelper.include_file.match(@line)
+      match && File.expand_path(match[:file_path])
     end
 
     def include_file_options
-      [$3, $4] if @line =~ IncludeFileRegexp and !$2.nil?
+      match = RegexpHelper.include_file.match(@line)
+      match && match[:options] && [match[:key], match[:value]]
     end
 
     # Determines the paragraph type of the current line.
