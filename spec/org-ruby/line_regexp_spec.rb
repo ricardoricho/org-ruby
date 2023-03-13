@@ -124,6 +124,17 @@ module Orgmode
       end
     end
 
+    describe '.raw_text' do
+      it { expect(regexp.raw_text).to match '#+word:' }
+      it { expect(regexp.raw_text).to match ' #+initial_space:' }
+      it { expect(regexp.raw_text).to match '#+final_pace: ' }
+      it 'capture keyword and spaces' do
+        match = regexp.raw_text.match "   #+AUTHOR: name"
+        expect(match[:keyword]).to eq 'AUTHOR'
+        expect(match[:spaces]).to eq '   '
+      end
+    end
+
     describe '.table_row' do
       it { expect(regexp.table_row).to match "\t |" }
       it { expect(regexp.table_row).to match "\t | table" }

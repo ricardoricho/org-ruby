@@ -59,6 +59,10 @@ module Orgmode
       /^\s*:(?<key>[\w\-]+):\s*(?<value>.*)$/
     end
 
+    def raw_text
+      /^(?<spaces>\s*)#\+(?<keyword>\w+):\s*/
+    end
+
     # for an org-mode table, the first non-whitespace character is a
     # | (pipe).
     def table_row

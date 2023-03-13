@@ -233,19 +233,18 @@ module Orgmode
       check_assignment_or_regexp(:inline_example, RegexpHelper.inline_example)
     end
 
-    RawTextRegexp = /^(\s*)#\+(\w+):\s*/
-
     # Checks if this line is raw text.
     def raw_text?
-      check_assignment_or_regexp(:raw_text, RawTextRegexp)
+      check_assignment_or_regexp(:raw_text, RegexpHelper.raw_text)
     end
 
     def raw_text_tag
-      $2.upcase if @line =~ RawTextRegexp
+      match = RegexpHelper.raw_text.match(@line)
+      match && match[:keyword].upcase
     end
 
     def strip_raw_text_tag
-      @line.sub(RawTextRegexp) { |match| $1 }
+      @line.sub(RegexpHelper.raw_text) { |match| $1 }
     end
 
     InBufferSettingRegexp = /^#\+(\w+):\s*(.*)$/
