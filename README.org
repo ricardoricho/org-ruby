@@ -11,7 +11,7 @@ An [[http://orgmode.org][Org-mode]] parser written in Ruby.
 ** Installation
 
 #+BEGIN_SRC ruby
-gem install org-ruby
+  gem install org-ruby
 #+END_SRC
 
 ** Usage
@@ -27,11 +27,11 @@ From Ruby:
 
   # Renders Textile
   Orgmode::Parser.new("* Hello world!").to_textile
-  # => "h1. Hello world!\n" 
+  # => "h1. Hello world!\n"
 
   # Renders Markdown
   Orgmode::Parser.new("* Hello world!").to_markdown
-  # => "# Hello world!\n" 
+  # => "# Hello world!\n"
 
   # Renders HTML with custom markup
   Orgmode::Parser.new("* *Custom* /Markup/", { markup_file: "html.tags.yml" }).to_html
@@ -110,34 +110,34 @@ translated, your YAML file would look like this:
   ---
   :HtmlBlockTag:
     :quote: pre
-#+END_SRC     
+#+END_SRC
 
 This will change the HTML markup to be translated in the blockquote
 element.
 
 *** HTML Emphasis:
-     
+
 #+BEGIN_SRC yaml
   ---
   :Tags:
     "*":
       :open: b
       :close: b
-    "/": 
+    "/":
       :open: i
-      :close: i 
-    "_":  
+      :close: i
+    "_":
       :open: span style=\"text-decoration:underline;\"
       :close: span
-    "=":   
+    "=":
       :open: code
       :close: code
-    "~":   
+    "~":
       :open: code
       :close:  code
     "+":
       :open: del
-      :close: del 
+      :close: del
 #+END_SRC
 
 Let's say that you prefer =<strong>= over =<b>= in the Bold emphasis
@@ -165,7 +165,7 @@ element of Org-mode, your YAML file should look like this:
     "=": "`"
     "~": "`"
     "+": "~~"
-#+END_SRC    
+#+END_SRC
 
 Let's say that you prefer underscores for Bold and Italics elements in
 Markdown, your YAML file should look like this:
@@ -191,7 +191,7 @@ Markdown, your YAML file should look like this:
 
 ** License
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
  (The MIT License)
 
  Copyright (c) 2009 Brian Dewey
@@ -203,7 +203,7 @@ Markdown, your YAML file should look like this:
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice shall be
  included in all copies or substantial portions of the Software.
 
