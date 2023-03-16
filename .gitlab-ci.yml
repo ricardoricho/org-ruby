@@ -5,7 +5,8 @@ before_script:
   - bundle install
 pages:
   script:
-    - rake documentation:build
+    - bundle exec rspec
+    - bundle exec rake documentation:build
   artifacts:
     paths:
       # The folder that contains the files to be exposed at the Page URL
