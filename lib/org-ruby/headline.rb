@@ -36,9 +36,6 @@ module Orgmode
 
     KeywordsRegexp = Regexp.new("^(#{Keywords.join('|')})\$")
 
-    # This matches a headline marked as COMMENT
-    CommentHeadlineRegexp = /^COMMENT\s+/
-
     def initialize(line, parser = nil, offset = 0)
       super(line, parser)
       @body_lines = []
@@ -80,7 +77,7 @@ module Orgmode
 
     # Determines if a headline has the COMMENT keyword.
     def comment_headline?
-      @headline_text =~ CommentHeadlineRegexp
+      RegexpHelper.comment_headline.match(@headline_text)
     end
 
     # Overrides Line.paragraph_type.
