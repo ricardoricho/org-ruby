@@ -23,18 +23,14 @@ module Orgmode
     # exclude::       The entire subtree from this heading should be excluded.
     # headline_only:: The headline should be exported, but not the body.
     # all::           Everything should be exported, headline/body/children.
-    ValidExportStates = [:exclude, :headline_only, :all]
+
+    # ValidExportStates = [:exclude, :headline_only, :all]
 
     # The export state of this headline. See +ValidExportStates+.
     attr_accessor :export_state
 
     # Include the property drawer items found for the headline
     attr_accessor :property_drawer
-
-    # Special keywords allowed at the start of a line.
-    Keywords = %w[TODO DONE]
-
-    KeywordsRegexp = Regexp.new("^(#{Keywords.join('|')})\$")
 
     def initialize(line, parser = nil, offset = 0)
       super(line, parser)
@@ -95,12 +91,17 @@ module Orgmode
 
     def parse_keywords
       re = @parser.custom_keyword_regexp if @parser
-      re ||= KeywordsRegexp
+      re ||= keywords_regexp
       words = @headline_text.split
       if words.length > 0 && words[0] =~ re
         @keyword = words[0]
         @headline_text.sub!(Regexp.new("^#{@keyword}\s*"), "")
       end
+    end
+
+    def keywords_regexp
+      keywords = %w[TODO DONE]
+      Regexp.new("^(#{keywords.join('|')})\$")
     end
   end
 end

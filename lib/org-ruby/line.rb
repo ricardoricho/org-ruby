@@ -170,13 +170,11 @@ module Orgmode
     end
 
     def begin_block?
-      # @line =~ BlockRegexp && $1 =~ /BEGIN/i
       match = RegexpHelper.block.match(@line)
       match && match[1].downcase == 'begin'
     end
 
     def end_block?
-      # @line =~ BlockRegexp && $1 =~ /END/i
       match = RegexpHelper.block.match(@line)
       match && match[1].downcase == 'end'
     end

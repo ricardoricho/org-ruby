@@ -23,7 +23,7 @@ module Orgmode
     end
 
     describe 'remove_tags!' do
-      it 'does not affect headline' do
+      it 'does not affect headline without tags' do
         expect(headline.remove_tags!).to be_nil
       end
 
