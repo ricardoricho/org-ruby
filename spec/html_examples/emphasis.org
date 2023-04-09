@@ -1,5 +1,7 @@
 * Inline Formatting test for emphasis
 Fix issue [[https://github.com/wallyqs/org-ruby/issues/48][#48]] ~~/.bash~ and ~C-'~
+Fix issue [[https://github.com/wallyqs/org-ruby/issues/79][#79]] ='something'=
+
 ** Simple feature test
 
 *bold*

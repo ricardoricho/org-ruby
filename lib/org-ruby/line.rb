@@ -54,39 +54,34 @@ module Orgmode
     # Tests if a line is a comment.
     def comment?
       return @assigned_paragraph_type == :comment if @assigned_paragraph_type
-      return block_type.casecmp("COMMENT") if begin_block? or end_block?
-      @line =~ /^[ \t]*?#[ \t]/
+      return block_type.casecmp("COMMENT") if begin_block? || end_block?
+
+      RegexpHelper.comment.match(@line)
     end
 
-    PropertyDrawerRegexp = /^\s*:(PROPERTIES|END):/i
+    # Determines if a line is an orgmode "headline":
+    # A headline begins with one or more asterisks.
+    def headline?
+      RegexpHelper.headline.match(to_s)
+    end
 
     def property_drawer_begin_block?
-      @line =~ PropertyDrawerRegexp && $1 =~ /PROPERTIES/
+      match = RegexpHelper.drawer.match(@line)
+      match && match[:name].downcase == 'properties'
     end
 
     def property_drawer_end_block?
-      @line =~ PropertyDrawerRegexp && $1 =~ /END/
+      match = RegexpHelper.drawer.match(@line)
+      match && match[:name].downcase == 'end'
     end
-
-    def property_drawer?
-      check_assignment_or_regexp(:property_drawer, PropertyDrawerRegexp)
-    end
-
-    PropertyDrawerItemRegexp = /^\s*:([0-9A-Za-z_\-]+):\s*(.*)$/i
 
     def property_drawer_item?
-      @line =~ PropertyDrawerItemRegexp
-    end
-
-    def property_drawer_item
-      @line =~ PropertyDrawerItemRegexp
-
-      [$1, $2]
+      RegexpHelper.property_item.match(@line)
     end
 
     # Tests if a line contains metadata instead of actual content.
     def metadata?
-      check_assignment_or_regexp(:metadata, /^\s*(CLOCK|DEADLINE|START|CLOSED|SCHEDULED):/)
+      check_assignment_or_regexp(:metadata, RegexpHelper.metadata)
     end
 
     def nonprinting?
@@ -94,60 +89,52 @@ module Orgmode
     end
 
     def blank?
-      check_assignment_or_regexp(:blank, /^\s*$/)
+      check_assignment_or_regexp(:blank, RegexpHelper.blank)
     end
 
     def plain_list?
       ordered_list? or unordered_list? or definition_list?
     end
 
-    UnorderedListRegexp = /^\s*(-|\+|\s+[*])\s+/
-
     def unordered_list?
-      check_assignment_or_regexp(:unordered_list, UnorderedListRegexp)
+      check_assignment_or_regexp(:unordered_list, RegexpHelper.list_unordered)
     end
 
     def strip_unordered_list_tag
-      @line.sub(UnorderedListRegexp, "")
+      @line.sub(RegexpHelper.list_unordered, "")
     end
-
-    DefinitionListRegexp = /^\s*(-|\+|\s+[*])\s+(.*\s+|)::($|\s+)/
 
     def definition_list?
-      check_assignment_or_regexp(:definition_list, DefinitionListRegexp)
+      check_assignment_or_regexp(:definition_list,
+                                 RegexpHelper.list_description)
     end
-
-    OrderedListRegexp = /^\s*\d+(\.|\))\s+/
 
     def ordered_list?
-      check_assignment_or_regexp(:ordered_list, OrderedListRegexp)
+      check_assignment_or_regexp(:ordered_list, RegexpHelper.list_ordered)
     end
 
-    ContinuedOrderedListRegexp = /^\[@(\d+)\]\s+/
-
     def strip_ordered_list_tag
-      line = @line.sub(OrderedListRegexp, "")
-      if line =~ ContinuedOrderedListRegexp
-        line = line.sub(ContinuedOrderedListRegexp, "")
+      line = @line.sub(RegexpHelper.list_ordered, "")
+      if line =~ RegexpHelper.list_ordered_continue
+        line = line.sub(RegexpHelper.list_ordered_continue, "")
       end
-      return line
+      line
     end
 
     def extract_properties
-      if @line =~ OrderedListRegexp
-        line_without_number =  @line.sub(OrderedListRegexp, "")
-        if line_without_number =~ ContinuedOrderedListRegexp
+      if @line =~ RegexpHelper.list_ordered
+        line_without_number =  @line.sub(RegexpHelper.list_ordered, "")
+        if line_without_number =~ RegexpHelper.list_ordered_continue
           # Extract the start of the ordered list and store it in
           # properties
-          @properties["li"] = line_without_number.match(ContinuedOrderedListRegexp)[1]
+          @properties["li"] =
+            line_without_number.match(RegexpHelper.list_ordered_continue)[1]
         end
       end
     end
 
-    HorizontalRuleRegexp = /^\s*-{5,}\s*$/
-
     def horizontal_rule?
-      check_assignment_or_regexp(:horizontal_rule, HorizontalRuleRegexp)
+      check_assignment_or_regexp(:horizontal_rule, RegexpHelper.horizontal_rule)
     end
 
     # Extracts meaningful text and excludes org-mode markup,
@@ -155,9 +142,10 @@ module Orgmode
     def output_text
       return strip_ordered_list_tag if ordered_list?
       return strip_unordered_list_tag if unordered_list?
-      return @line.sub(InlineExampleRegexp, "") if inline_example?
+      return @line.sub(RegexpHelper.inline_example, "") if inline_example?
       return strip_raw_text_tag if raw_text?
-      return @line
+
+      @line
     end
 
     def plain_text?
@@ -165,17 +153,11 @@ module Orgmode
     end
 
     def table_row?
-      # for an org-mode table, the first non-whitespace character is a
-      # | (pipe).
-      check_assignment_or_regexp(:table_row, /^\s*\|/)
+      check_assignment_or_regexp(:table_row, RegexpHelper.table_row)
     end
 
     def table_separator?
-      # an org-mode table separator has the first non-whitespace
-      # character as a | (pipe), then consists of nothing else other
-      # than pipes, hyphens, and pluses.
-
-      check_assignment_or_regexp(:table_separator, /^\s*\|[-\|\+]*\s*$/)
+      check_assignment_or_regexp(:table_separator, RegexpHelper.table_separator)
     end
 
     # Checks if this line is a table header.
@@ -187,28 +169,22 @@ module Orgmode
       table_row? or table_separator? or table_header?
     end
 
-    #
-    # 1) block delimiters
-    # 2) block type (src, example, html...)
-    # 3) switches (e.g. -n -r -l "asdf")
-    # 4) header arguments (:hello world)
-    #
-    BlockRegexp = /^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?\s*([^\":\n]*\"[^\"\n*]*\"[^\":\n]*|[^\":\n]*)?\s*([^\n]*)?/i
-
     def begin_block?
-      @line =~ BlockRegexp && $1 =~ /BEGIN/i
+      match = RegexpHelper.block.match(@line)
+      match && match[1].downcase == 'begin'
     end
 
     def end_block?
-      @line =~ BlockRegexp && $1 =~ /END/i
+      match = RegexpHelper.block.match(@line)
+      match && match[1].downcase == 'end'
     end
 
     def block_type
-      $2 if @line =~ BlockRegexp
+      $2 if RegexpHelper.block.match(@line)
     end
 
     def block_lang
-      $3 if @line =~ BlockRegexp
+      $3 if RegexpHelper.block.match(@line)
     end
 
     def code_block?
@@ -216,13 +192,13 @@ module Orgmode
     end
 
     def block_switches
-      $4 if @line =~ BlockRegexp
+      $4 if RegexpHelper.block.match(@line)
     end
 
     def block_header_arguments
       header_arguments = { }
 
-      if @line =~ BlockRegexp
+      if RegexpHelper.block.match(@line)
         header_arguments_string = $5
         harray = header_arguments_string.split(' ')
         harray.each_with_index do |arg, i|
@@ -249,30 +225,25 @@ module Orgmode
         !['code', 'none', nil, ''].include?(export_state)
     end
 
-    InlineExampleRegexp = /^\s*:\s/
-
     # Test if the line matches the "inline example" case:
     # the first character on the line is a colon.
     def inline_example?
-      check_assignment_or_regexp(:inline_example, InlineExampleRegexp)
+      check_assignment_or_regexp(:inline_example, RegexpHelper.inline_example)
     end
-
-    RawTextRegexp = /^(\s*)#\+(\w+):\s*/
 
     # Checks if this line is raw text.
     def raw_text?
-      check_assignment_or_regexp(:raw_text, RawTextRegexp)
+      check_assignment_or_regexp(:raw_text, RegexpHelper.raw_text)
     end
 
     def raw_text_tag
-      $2.upcase if @line =~ RawTextRegexp
+      match = RegexpHelper.raw_text.match(@line)
+      match && match[:keyword].upcase
     end
 
     def strip_raw_text_tag
-      @line.sub(RawTextRegexp) { |match| $1 }
+      @line.sub(RegexpHelper.raw_text) { |match| $1 }
     end
-
-    InBufferSettingRegexp = /^#\+(\w+):\s*(.*)$/
 
     # call-seq:
     #     line.in_buffer_setting?         => boolean
@@ -283,13 +254,16 @@ module Orgmode
     # will get called if the line contains an in-buffer setting with
     # the key and value for the setting.
     def in_buffer_setting?
-      return false if @assigned_paragraph_type && @assigned_paragraph_type != :comment
-      if block_given? then
-        if @line =~ InBufferSettingRegexp
-          yield $1, $2
+      return false if @assigned_paragraph_type &&
+                      @assigned_paragraph_type != :comment
+      match = RegexpHelper.in_buffer_setting.match(@line)
+
+      if block_given?
+        if match
+          yield match[:key], match[:value]
         end
       else
-        @line =~ InBufferSettingRegexp
+        match
       end
     end
 
@@ -299,34 +273,31 @@ module Orgmode
       @assigned_paragraph_type == :title
     end
 
-    ResultsBlockStartsRegexp = /^\s*#\+RESULTS:\s*(.+)?$/i
-
     def start_of_results_code_block?
-      @line =~ ResultsBlockStartsRegexp
+      @line =~ RegexpHelper.results_start
     end
 
-    LinkAbbrevRegexp = /^\s*#\+LINK:\s*(\w+)\s+(.+)$/i
-
     def link_abbrev?
-      @line =~ LinkAbbrevRegexp
+      @line =~ RegexpHelper.link_abbrev
     end
 
     def link_abbrev_data
-      [$1, $2] if @line =~ LinkAbbrevRegexp
+      match = RegexpHelper.link_abbrev.match(@line)
+      match && [match[:text], match[:url]]
     end
 
-    IncludeFileRegexp = /^\s*#\+INCLUDE:\s*"([^"]+)"(\s+([^\s]+)\s+(.*))?$/i
-
     def include_file?
-      @line =~ IncludeFileRegexp
+      @line =~ RegexpHelper.include_file
     end
 
     def include_file_path
-      File.expand_path $1 if @line =~ IncludeFileRegexp
+      match = RegexpHelper.include_file.match(@line)
+      match && File.expand_path(match[:file_path])
     end
 
     def include_file_options
-      [$3, $4] if @line =~ IncludeFileRegexp and !$2.nil?
+      match = RegexpHelper.include_file.match(@line)
+      match && match[:options] && [match[:key], match[:value]]
     end
 
     # Determines the paragraph type of the current line.
@@ -378,10 +349,11 @@ module Orgmode
       end
     end
 
+    # Order is important. A definition_list is also an unordered_list
     def determine_major_mode
       @major_mode = \
       case
-      when definition_list? # order is important! A definition_list is also an unordered_list!
+      when definition_list?
         :definition_list
       when ordered_list?
         :ordered_list
@@ -413,7 +385,7 @@ module Orgmode
     #              this regexp.
     def check_assignment_or_regexp(assignment, regexp)
       return @assigned_paragraph_type == assignment if @assigned_paragraph_type
-      return @line =~ regexp
+      @line =~ regexp
     end
-  end                           # class Line
-end                             # module Orgmode
+  end
+end

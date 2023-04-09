@@ -2,15 +2,6 @@ require 'spec_helper'
 
 describe Orgmode::Headline do
 
-  it "should recognize headlines that start with asterisks" do
-    expect(Orgmode::Headline.headline?("*** test\n")).to be_truthy
-  end
-
-  it "should reject headlines without headlines at the start" do
-    expect(Orgmode::Headline.headline?("  nope!")).to be_nil
-    expect(Orgmode::Headline.headline?("  tricked you!!!***")).to be_nil
-  end
-
   it "should reject improper initialization" do
     expect {
       Orgmode::Headline.new " tricked**"

@@ -23,7 +23,8 @@ module Orgmode
     # exclude::       The entire subtree from this heading should be excluded.
     # headline_only:: The headline should be exported, but not the body.
     # all::           Everything should be exported, headline/body/children.
-    ValidExportStates = [:exclude, :headline_only, :all]
+
+    # ValidExportStates = [:exclude, :headline_only, :all]
 
     # The export state of this headline. See +ValidExportStates+.
     attr_accessor :export_state
@@ -31,36 +32,18 @@ module Orgmode
     # Include the property drawer items found for the headline
     attr_accessor :property_drawer
 
-    # This is the regex that matches a line
-    LineRegexp = /^\*+\s+/
-
-    # This matches the tags on a headline
-    TagsRegexp = /\s*:[\w:@]*:\s*$/
-
-    # Special keywords allowed at the start of a line.
-    Keywords = %w[TODO DONE]
-
-    KeywordsRegexp = Regexp.new("^(#{Keywords.join('|')})\$")
-
-    # This matches a headline marked as COMMENT
-    CommentHeadlineRegexp = /^COMMENT\s+/
-
     def initialize(line, parser = nil, offset = 0)
       super(line, parser)
       @body_lines = []
       @tags = []
       @export_state = :exclude
       @property_drawer = { }
-      if (@line =~ LineRegexp)
+      if (@line =~ RegexpHelper.headline)
         new_offset = (parser && parser.title?) ? offset + 1 : offset
         @level = $&.strip.length + new_offset
         @headline_text = $'.strip
-        if (@headline_text =~ TagsRegexp) then
-          @tags = $&.split(/:/)              # split tag text on semicolon
-          @tags.delete_at(0)                 # the first item will be empty; discard
-          @headline_text.gsub!(TagsRegexp, "") # Removes the tags from the headline
-        end
         @keyword = nil
+        remove_tags!
         parse_keywords
       else
         raise "'#{line}' is not a valid headline"
@@ -76,20 +59,26 @@ module Orgmode
       slugify
     end
 
-    # Determines if a line is an orgmode "headline":
-    # A headline begins with one or more asterisks.
-    def self.headline?(line)
-      line =~ LineRegexp
+    def remove_tags!
+      match = RegexpHelper.tags.match(@headline_text)
+      return nil unless match
+
+      @tags = match[:tags].split(':')
+      @headline_text.slice!($&)
+    end
+
+    def store_property(property)
+      @property_drawer.store(property[:key], property[:value])
     end
 
     # Determines if a headline has the COMMENT keyword.
     def comment_headline?
-      @headline_text =~ CommentHeadlineRegexp
+      RegexpHelper.comment_headline.match(@headline_text)
     end
 
     # Overrides Line.paragraph_type.
     def paragraph_type
-      :"heading#{@level}"
+      "heading#{@level}".to_sym
     end
 
     def headline_level
@@ -97,17 +86,22 @@ module Orgmode
       level - title_offset
     end
 
-    ######################################################################
+
     private
 
     def parse_keywords
       re = @parser.custom_keyword_regexp if @parser
-      re ||= KeywordsRegexp
+      re ||= keywords_regexp
       words = @headline_text.split
-      if words.length > 0 && words[0] =~ re then
+      if words.length > 0 && words[0] =~ re
         @keyword = words[0]
         @headline_text.sub!(Regexp.new("^#{@keyword}\s*"), "")
       end
+    end
+
+    def keywords_regexp
+      keywords = %w[TODO DONE]
+      Regexp.new("^(#{keywords.join('|')})\$")
     end
   end
 end

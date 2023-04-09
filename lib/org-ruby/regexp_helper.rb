@@ -1,4 +1,6 @@
-require 'logger'
+require 'logger' # Try to remove logger
+require 'org-ruby/line_regexp'
+require 'org-ruby/headline_regexp'
 
 module Orgmode
 
@@ -18,6 +20,8 @@ module Orgmode
   # * Use +rewrite_images+ to rewrite all inline image links with suitable
   #   markup for the output.
   class RegexpHelper
+    extend LineRegexp
+    extend HeadlineRegexp
 
     ######################################################################
     # EMPHASIS
