@@ -44,9 +44,7 @@ module Orgmode
         @headline_text = $'.strip
         @keyword = nil
         remove_tags!
-        parse_keywords
-      else
-        raise "'#{line}' is not a valid headline"
+        remove_keyword!
       end
     end
 
@@ -71,6 +69,14 @@ module Orgmode
       @property_drawer.store(property[:key], property[:value])
     end
 
+    def remove_keyword!
+      match = custom_keywords_regexp.match(@headline_text)
+      if match
+        @headline_text = match[:content]
+        @keyword = match[:keyword]
+      end
+    end
+
     # Determines if a headline has the COMMENT keyword.
     def comment_headline?
       RegexpHelper.comment_headline.match(@headline_text)
@@ -89,19 +95,19 @@ module Orgmode
 
     private
 
-    def parse_keywords
-      re = @parser.custom_keyword_regexp if @parser
-      re ||= keywords_regexp
-      words = @headline_text.split
-      if words.length > 0 && words[0] =~ re
-        @keyword = words[0]
-        @headline_text.sub!(Regexp.new("^#{@keyword}\s*"), "")
-      end
+    def custom_keywords_regexp
+      keywords = custom_keywords || default_keywords
+
+      Regexp.new("\s*(?<keyword>#{keywords})\s+(?<content>.*)")
     end
 
-    def keywords_regexp
-      keywords = %w[TODO DONE]
-      Regexp.new("^(#{keywords.join('|')})\$")
+    def custom_keywords
+      @parser && !@parser.custom_keywords.empty? &&
+        @parser.custom_keywords.join('|')
+    end
+
+    def default_keywords
+      %w[TODO DONE].join('|')
     end
   end
 end

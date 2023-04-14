@@ -2,12 +2,6 @@ require 'spec_helper'
 
 describe Orgmode::Headline do
 
-  it "should reject improper initialization" do
-    expect {
-      Orgmode::Headline.new " tricked**"
-    }.to raise_error(RuntimeError)
-  end
-
   it "should properly determine headline level" do
     samples = ["* one", "** two", "*** three", "**** four"]
     expected = 1
