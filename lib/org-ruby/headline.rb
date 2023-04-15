@@ -34,18 +34,8 @@ module Orgmode
 
     def initialize(line, parser = nil, offset = 0)
       super(line, parser)
-      @body_lines = []
-      @tags = []
-      @export_state = :exclude
-      @property_drawer = { }
-      if (@line =~ RegexpHelper.headline)
-        new_offset = (parser && parser.title?) ? offset + 1 : offset
-        @level = $&.strip.length + new_offset
-        @headline_text = $'.strip
-        @keyword = nil
-        remove_tags!
-        remove_keyword!
-      end
+      initialize_properties
+      set_properties!(parser, offset)
     end
 
     # Override Line.output_text
@@ -58,7 +48,7 @@ module Orgmode
     end
 
     def remove_tags!
-      match = RegexpHelper.tags.match(@headline_text)
+      match = RegexpHelper.tags.match(headline_text)
       return nil unless match
 
       @tags = match[:tags].split(':')
@@ -70,7 +60,7 @@ module Orgmode
     end
 
     def remove_keyword!
-      match = custom_keywords_regexp.match(@headline_text)
+      match = custom_keywords_regexp.match(headline_text)
       if match
         @headline_text = match[:content]
         @keyword = match[:keyword]
@@ -79,7 +69,7 @@ module Orgmode
 
     # Determines if a headline has the COMMENT keyword.
     def comment_headline?
-      RegexpHelper.comment_headline.match(@headline_text)
+      RegexpHelper.comment_headline.match(headline_text)
     end
 
     # Overrides Line.paragraph_type.
@@ -92,8 +82,29 @@ module Orgmode
       level - title_offset
     end
 
+    def push_body_line(line)
+      @body_lines.push line
+    end
 
     private
+
+    def initialize_properties
+      @body_lines = []
+      @tags = []
+      @export_state = :exclude
+      @property_drawer = { }
+    end
+
+    def set_properties!(parser, offset)
+      match = RegexpHelper.headline.match(@line)
+      return if match.nil?
+
+      new_offset = (parser && parser.title?) ? offset + 1 : offset
+      @level = $&.strip.length + new_offset
+      @headline_text = $'.strip
+      remove_tags!
+      remove_keyword!
+    end
 
     def custom_keywords_regexp
       keywords = custom_keywords || default_keywords
