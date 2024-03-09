@@ -9,7 +9,7 @@ namespace :documentation do
     Dir.mkdir(public_dir) unless Dir.exist?(public_dir)
     output = File.expand_path("index.html", "public")
     file = File.new(output, 'w')
-    file.write(parser.to_html.gsub("&#8216;", "'").gsub("&#8217;", "'"))
+    file.write(parser.to_html)
     file.close
   end
 end

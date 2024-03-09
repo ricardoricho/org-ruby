@@ -104,6 +104,7 @@ module Orgmode
       m = super(mode)
       return list_indent_stack.pop unless html_tags.include?(m)
       return list_indent_stack.pop if skip_css?(m)
+
       push_indentation(@new_paragraph)
       @output.concat("</#{HtmlBlockTag[m]}>")
       list_indent_stack.pop

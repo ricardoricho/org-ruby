@@ -30,6 +30,7 @@ module Orgmode
     # Regexp that recognizes words in custom_keywords.
     def custom_keyword_regexp
       return nil if @custom_keywords.empty?
+
       Regexp.new("^(#{@custom_keywords.join('|')})\$")
     end
 
@@ -37,6 +38,7 @@ module Orgmode
     # only those headings will get exported.
     def export_select_tags
       return Array.new unless @in_buffer_settings["EXPORT_SELECT_TAGS"]
+
       @in_buffer_settings["EXPORT_SELECT_TAGS"].split
     end
 
@@ -156,14 +158,10 @@ module Orgmode
       lines.each do |text|
         line = Line.new text, self
 
-        if @parser_options[:allow_include_files]
-          if line.include_file? && !line.include_file_path.nil?
+        if @parser_options[:allow_include_files] && line.include_file? &&
+           !line.include_file_path.nil?
             next unless check_include_file line.include_file_path
-
-            include_data = get_include_data line
-            include_lines = initialize_lines include_data
-            parse_lines include_lines
-          end
+            include_file(line)
         end
 
         # Store link abbreviations
@@ -172,11 +170,12 @@ module Orgmode
           @link_abbrevs[link_abbrev_data[0]] = link_abbrev_data[1]
         end
 
-        mode = :normal if line.end_block? && [line.paragraph_type, :comment].include?(mode)
-        mode = :normal if line.property_drawer_end_block? && (mode == :property_drawer)
+        if (line.end_block? && [line.paragraph_type, :comment].include?(mode)) ||
+           (line.property_drawer_end_block? && (mode == :property_drawer))
+          mode = :normal
+        end
 
-        case mode
-        when :normal, :quote, :center
+        if %i[normal quote center].include?(mode)
           if line.headline?
             line = Headline.new(line.to_s, self, @parser_options[:offset])
           elsif line.table_separator?
@@ -186,8 +185,9 @@ module Orgmode
             end
           end
           table_header_set = false unless line.table?
+        end
 
-        when :example, :html, :src
+        if %i[example html src].include?(mode)
           if previous_line
             set_name_for_code_block(previous_line, line)
             set_mode_for_results_block_contents(previous_line, line)
@@ -226,15 +226,21 @@ module Orgmode
 
         unless mode == :comment
           if @current_headline
-            @current_headline.body_lines << line
+            @current_headline.push_body_line(line)
           else
-            @header_lines << line
+            @header_lines.push(line)
           end
         end
 
         previous_line = line
-      end                       # lines.each
-    end                         # initialize
+      end
+    end
+
+    def include_file(line)
+      include_data = get_include_data line
+      include_lines = initialize_lines include_data
+      parse_lines include_lines
+    end
 
     # Get include data, when #+INCLUDE tag is used
     # @link http://orgmode.org/manual/Include-files.html

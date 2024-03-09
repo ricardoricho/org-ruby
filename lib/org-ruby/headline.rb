@@ -34,20 +34,8 @@ module Orgmode
 
     def initialize(line, parser = nil, offset = 0)
       super(line, parser)
-      @body_lines = []
-      @tags = []
-      @export_state = :exclude
-      @property_drawer = { }
-      if (@line =~ RegexpHelper.headline)
-        new_offset = (parser && parser.title?) ? offset + 1 : offset
-        @level = $&.strip.length + new_offset
-        @headline_text = $'.strip
-        @keyword = nil
-        remove_tags!
-        parse_keywords
-      else
-        raise "'#{line}' is not a valid headline"
-      end
+      initialize_properties
+      set_properties!(parser, offset)
     end
 
     # Override Line.output_text
@@ -60,7 +48,7 @@ module Orgmode
     end
 
     def remove_tags!
-      match = RegexpHelper.tags.match(@headline_text)
+      match = RegexpHelper.tags.match(headline_text)
       return nil unless match
 
       @tags = match[:tags].split(':')
@@ -71,9 +59,17 @@ module Orgmode
       @property_drawer.store(property[:key], property[:value])
     end
 
+    def remove_keyword!
+      match = custom_keywords_regexp.match(headline_text)
+      if match
+        @headline_text = match[:content]
+        @keyword = match[:keyword]
+      end
+    end
+
     # Determines if a headline has the COMMENT keyword.
     def comment_headline?
-      RegexpHelper.comment_headline.match(@headline_text)
+      RegexpHelper.comment_headline.match(headline_text)
     end
 
     # Overrides Line.paragraph_type.
@@ -86,22 +82,43 @@ module Orgmode
       level - title_offset
     end
 
+    def push_body_line(line)
+      @body_lines.push line
+    end
 
     private
 
-    def parse_keywords
-      re = @parser.custom_keyword_regexp if @parser
-      re ||= keywords_regexp
-      words = @headline_text.split
-      if words.length > 0 && words[0] =~ re
-        @keyword = words[0]
-        @headline_text.sub!(Regexp.new("^#{@keyword}\s*"), "")
-      end
+    def initialize_properties
+      @body_lines = []
+      @tags = []
+      @export_state = :exclude
+      @property_drawer = { }
     end
 
-    def keywords_regexp
-      keywords = %w[TODO DONE]
-      Regexp.new("^(#{keywords.join('|')})\$")
+    def set_properties!(parser, offset)
+      match = RegexpHelper.headline.match(@line)
+      return if match.nil?
+
+      new_offset = (parser && parser.title?) ? offset + 1 : offset
+      @level = $&.strip.length + new_offset
+      @headline_text = $'.strip
+      remove_tags!
+      remove_keyword!
+    end
+
+    def custom_keywords_regexp
+      keywords = custom_keywords || default_keywords
+
+      Regexp.new("\s*(?<keyword>#{keywords})\s+(?<content>.*)")
+    end
+
+    def custom_keywords
+      @parser && !@parser.custom_keywords.empty? &&
+        @parser.custom_keywords.join('|')
+    end
+
+    def default_keywords
+      %w[TODO DONE].join('|')
     end
   end
 end
