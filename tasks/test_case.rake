@@ -2,7 +2,7 @@ require 'org-ruby'
 
 namespace :testcase do
   @data_directory = File.join(File.dirname(__FILE__), "../spec/html_examples")
-  
+
   desc "List all of the current HTML test cases"
   task :list do
     org_files = File.expand_path(File.join(@data_directory, "*.org" ))
