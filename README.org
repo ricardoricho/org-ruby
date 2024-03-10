@@ -2,11 +2,13 @@
 
 * OrgRuby
 
-[[https://secure.travis-ci.org/wallyqs/org-ruby.png?branch=master]]
-
 An [[http://orgmode.org][Org-mode]] parser written in Ruby.
 
 /Originally by Brian Dewey/
+
+** Demo
+
+See the README file in [[https://ricardo-richo.gitlab.io/org-ruby][Gitlab]] ([[https://ricardo-richo.gitlab.io/org-ruby/]])
 
 ** Installation
 
