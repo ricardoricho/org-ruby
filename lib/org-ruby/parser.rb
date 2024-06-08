@@ -391,6 +391,7 @@ module Orgmode
           translate(headline.body_lines, output_buffer)
         end
       end
+      output_buffer.output_footnotes!
     end
 
     # Converts an array of lines to the appropriate format.
@@ -400,7 +401,6 @@ module Orgmode
       lines.each { |line| output_buffer.insert(line) }
       output_buffer.flush!
       output_buffer.pop_mode while output_buffer.current_mode
-      output_buffer.output_footnotes!
       output_buffer.output
     end
 

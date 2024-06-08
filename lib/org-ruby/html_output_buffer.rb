@@ -30,7 +30,7 @@ module Orgmode
       super(output)
       @options = opts
       @new_paragraph = :start
-      @footnotes = {}
+      @footnotes = []
       @unclosed_tags = []
 
       # move from output_buffer
@@ -238,20 +238,20 @@ module Orgmode
     # defined separately from their references will be rendered where they appear in the original
     # Org document.
     def output_footnotes!
-      return false if !options[:export_footnotes] || @footnotes.empty?
+      return if !options[:export_footnotes] || @footnotes.empty?
 
       @output.concat footnotes_header
-      @footnotes.each do |name, (defi, content)|
-        @buffer = defi
-        @output << "<div class=\"footdef\"><sup><a id=\"fn.#{name}\" href=\"#fnr.#{name}\">#{name}</a></sup>" \
+      @footnotes.each do |footnote|
+        @buffer = footnote[:content].empty? && footnote[:label] || footnote[:content]
+        a_href = footnote[:index]
+        name = footnote[:label].empty? ? footnote[:content] : footnote[:label]
+        @output << "<div class=\"footdef\"><sup><a id=\"fn.#{name}\" href=\"#fnr.#{a_href}\">#{a_href}</a></sup>" \
                 << "<p class=\"footpara\">" \
                 << inline_formatting(@buffer) \
                 << "</p></div>\n"
       end
 
       @output.concat "</div>\n</div>"
-
-      true
     end
 
     def footnotes_header
@@ -390,16 +390,27 @@ module Orgmode
         str.gsub!(/\s*\|\s*/, quote_tags("</th><th>"))
       end
 
-      if @options[:export_footnotes] then
+      if @options[:export_footnotes]
         @re_help.rewrite_footnote_definition str do |name, content|
           quote_tags("<sup><a id=\"fn.#{name}\" class=\"footnum\" href=\"#fnr.#{name}\">") +
             name + quote_tags("</a></sup> ") + content
         end
 
-        @re_help.rewrite_footnote str do |name, defi|
-          @footnotes[name] = defi if defi
-          quote_tags("<sup><a id=\"fnr.#{name}\" class=\"footref\" href=\"#fn.#{name}\">") +
-            name + quote_tags("</a></sup>")
+        # Reference footnote
+        @re_help.rewrite_footnote str do |label, definition|
+          footnote = @footnotes.find { |footnote| footnote[:label] == label }
+          footnote_index = footnote.nil? ? @footnotes.length + 1 : footnote[:index]
+
+          if footnote.nil?
+            footnote = { index: footnote_index, label: label, content: definition }
+            @footnotes.push(footnote)
+          end
+
+          a_id = footnote_index
+          a_href = label.nil? ? footnote_index : label
+
+          footnote_tag = "<sup><a id=\"fnr.#{a_id}\" class=\"footref\" href=\"#fn.#{a_href}\">#{a_id}</a></sup>"
+          quote_tags(footnote_tag)
         end
       end
 

@@ -39,6 +39,49 @@ module Orgmode
       end
     end
 
+    describe '.footnote_definition' do
+      it { expect(regexp.footnote_definition).to match '[fn:label]' }
+      it 'must occur at the start of an unindented line' do
+        expect(regexp.footnote_definition).not_to match ' [fn:label]'
+        expect(regexp.footnote_definition).not_to match "\t[fn:label]"
+      end
+      it { expect(regexp.footnote_definition).to match '[fn:label] contents' }
+      it 'caputre :label' do
+        match = regexp.footnote_definition.match('[fn:la-be_l]')
+        expect(match[:label]).to eq 'la-be_l'
+        expect(match[:contents]).to eq ''
+      end
+      it 'capture :contents' do
+        match = regexp.footnote_definition.match('[fn:la_bel] con(ten)ts]' )
+        expect(match[:label]).to eq 'la_bel'
+        expect(match[:contents]).to eq ' con(ten)ts]'
+      end
+
+    end
+
+    describe '.footnote_reference' do
+      it { expect(regexp.footnote_reference).to match '[fn:label]' }
+      it { expect(regexp.footnote_reference).to match '[fn:99]' }
+      it { expect(regexp.footnote_reference).to match ' [fn:label:contents]' }
+      it { expect(regexp.footnote_reference).to match "\t[fn::contents]"}
+      it 'caputre :label' do
+        match = regexp.footnote_reference.match('[fn:la-be_l]')
+        expect(match[:label]).to eq 'la-be_l'
+        expect(match[:contents]).to eq ''
+      end
+      it 'capture :content' do
+        match = regexp.footnote_reference.match('[fn:la_bel:con(ten)ts]' )
+        expect(match[:label]).to eq 'la_bel'
+        expect(match[:contents]).to eq 'con(ten)ts'
+      end
+
+      it 'support anonymus footnotes' do
+        match = regexp.footnote_reference.match('[fn::contents]' )
+        expect(match[:label]).to eq ''
+        expect(match[:contents]).to eq 'contents'
+      end
+    end
+
     describe '.headline' do
       # should recognize headlines that start with asterisks
       it { expect(regexp.headline).to match "* Headline" }

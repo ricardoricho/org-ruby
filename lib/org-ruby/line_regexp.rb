@@ -22,6 +22,14 @@ module Orgmode
       /^\s*:(?<name>[\w\-]+):$/
     end
 
+    def footnote_definition
+      /^\[fn:(?<label>[\w-]+)\](?<contents>.*)/
+    end
+
+    def footnote_reference
+      /\[fn:(?<label>[\w-]*)(:?)(?<contents>.*)\]/
+    end
+
     def headline
       /^\*+\s+/
     end

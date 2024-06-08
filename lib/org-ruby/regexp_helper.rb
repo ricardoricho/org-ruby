@@ -108,14 +108,16 @@ module Orgmode
 
     # rewrite footnotes
     def rewrite_footnote(str)
-      str.gsub!(org_footnote_regexp) do |_match|
-        yield Regexp.last_match(1), Regexp.last_match(3)
+      str.gsub!(RegexpHelper.footnote_reference) do |_match|
+        match = Regexp.last_match
+        yield match[:label], match[:contents]
       end
     end
 
     def rewrite_footnote_definition(str)
-      str.gsub!(org_footnote_def_regexp) do |_match|
-        yield Regexp.last_match(1), Regexp.last_match(5)
+      str.gsub!(RegexpHelper.footnote_definition) do |_match|
+        match = Regexp.last_match
+        yield match[:label], match[:contents]
       end
     end
 
