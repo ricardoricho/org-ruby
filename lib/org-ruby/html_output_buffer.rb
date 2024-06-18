@@ -391,9 +391,11 @@ module Orgmode
       end
 
       if @options[:export_footnotes]
-        @re_help.rewrite_footnote_definition str do |name, content|
-          quote_tags("<sup><a id=\"fn.#{name}\" class=\"footnum\" href=\"#fnr.#{name}\">") +
-            name + quote_tags("</a></sup> ") + content
+        @re_help.capture_footnote_definition(str) do |label, content|
+          footnote = @footnotes.find { |footnote| footnote[:label] == label }
+          footnote[:content] = content unless footnote.nil?
+          # Capture definition and replace it with nil
+          nil
         end
 
         # Reference footnote

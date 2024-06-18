@@ -258,7 +258,7 @@ module Orgmode
     end
 
     def output_footnotes!
-      false
+      # Implement in output buffers
     end
 
     # Tests if the current line should be accumulated in the current

@@ -114,7 +114,7 @@ module Orgmode
       end
     end
 
-    def rewrite_footnote_definition(str)
+    def capture_footnote_definition(str)
       str.gsub!(RegexpHelper.footnote_definition) do |_match|
         match = Regexp.last_match
         yield match[:label], match[:contents]
