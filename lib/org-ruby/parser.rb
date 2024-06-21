@@ -315,6 +315,7 @@ module Orgmode
       @headlines.each do |headline|
         translate(headline.body_lines, output_buffer)
       end
+      output_buffer.output_footnotes!
       output
     end
 
