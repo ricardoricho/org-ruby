@@ -8,7 +8,8 @@ An [[http://orgmode.org][Org-mode]] parser written in Ruby.
 
 ** Demo
 
-See the README file in [[https://ricardo-richo.gitlab.io/org-ruby][Gitlab]] ([[https://ricardo-richo.gitlab.io/org-ruby/]])
+See the README file in [[https://ricardo-richo.gitlab.io/org-ruby][Gitlab]] ([[https://ricardo-richo.gitlab.io/org-ruby/]]) or in
+[[https://ricardoricho.github.io/org-ruby/][GitHub]] (https://ricardoricho.github.io/org-ruby/)
 
 ** Installation
 
