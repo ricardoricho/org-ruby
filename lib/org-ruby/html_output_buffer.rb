@@ -218,7 +218,7 @@ module Orgmode
     end
 
     def html_buffer_code_block_indent(line)
-      if mode_is_code?(current_mode) && !(line.block_type)
+      if mode_is_code?(current_mode) && !line.block_type
         # Determines the amount of whitespaces to be stripped at the
         # beginning of each line in code block.
         if line.paragraph_type != :blank
@@ -244,11 +244,10 @@ module Orgmode
       @footnotes.each do |footnote|
         @buffer = footnote[:content].empty? && footnote[:label] || footnote[:content]
         a_href = footnote[:index]
-        name = footnote[:label].empty? ? footnote[:content] : footnote[:label]
-        @output << "<div class=\"footdef\"><sup><a id=\"fn.#{name}\" href=\"#fnr.#{a_href}\">#{a_href}</a></sup>" \
-                << "<p class=\"footpara\">" \
+        @output << "<div class=\"footdef\"><sup><a id=\"fn.#{a_href}\" class=\"footnum\" href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>" \
+                << "<div class=\"footpara\" role=\"doc-footnote\"><p class=\"footpara\">" \
                 << inline_formatting(@buffer) \
-                << "</p></div>\n"
+                << "</p></div></div>\n"
       end
 
       @output.concat "</div>\n</div>"
@@ -399,19 +398,22 @@ module Orgmode
         end
 
         # Reference footnote
-        @re_help.rewrite_footnote str do |label, definition|
+        @re_help.rewrite_footnote str do |label, content|
           footnote = @footnotes.find { |footnote| footnote[:label] == label }
-          footnote_index = footnote.nil? ? @footnotes.length + 1 : footnote[:index]
 
           if footnote.nil?
-            footnote = { index: footnote_index, label: label, content: definition }
+            footnote_index = @footnotes.length + 1
+            footnote = { index: footnote_index, label: label, content: content }
             @footnotes.push(footnote)
+          else
+            footnote[:content] = content
           end
 
-          a_id = footnote_index
-          a_href = label.nil? ? footnote_index : label
+          a_id = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
+          a_text = footnote[:index]
+          a_href = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
 
-          footnote_tag = "<sup><a id=\"fnr.#{a_id}\" class=\"footref\" href=\"#fn.#{a_href}\">#{a_id}</a></sup>"
+          footnote_tag = "<sup><a id=\"fnr.#{a_id}\" class=\"footref\" href=\"#fn.#{a_href}\" role=\"doc-backlink\">#{a_text}</a></sup>"
           quote_tags(footnote_tag)
         end
       end

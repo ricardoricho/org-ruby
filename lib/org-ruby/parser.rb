@@ -57,7 +57,7 @@ module Orgmode
 
     # Returns true if we are to export footnotes
     def export_footnotes?
-      "t" == @options["f"]
+      "nil" != @options["f"]
     end
 
     # Returns true if we are to export heading numbers.
@@ -97,14 +97,14 @@ module Orgmode
     # I can construct a parser object either with an array of lines
     # or with a single string that I will split along \n boundaries.
     def initialize(lines, parser_options = {})
-      @lines = initialize_lines lines
+      @lines = initialize_lines(lines)
       @custom_keywords = []
-      @headlines = []
       @current_headline = nil
-      @header_lines = []
       @in_buffer_settings = {}
-      @options = {}
+      @headlines = []
+      @header_lines = []
       @link_abbrevs = {}
+      @options = {}
       @parser_options = parser_options
 
       #
