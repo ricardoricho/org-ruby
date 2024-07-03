@@ -3,6 +3,7 @@
   :quote: pre
   :example: blockquote
   :src: blockquote
+  :center: div align="center"
 :Tags:
   "*":
     :open: strong
