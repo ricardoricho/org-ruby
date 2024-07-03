@@ -20,8 +20,8 @@ module Orgmode
       end
     end
 
-    def pop_mode(mode = nil)
-      m = super(mode)
+    def pop_mode
+      m = super
       @list_indent_stack.pop
       if m == :center or m == :quote
         @add_paragraph = true

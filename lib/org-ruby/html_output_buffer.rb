@@ -100,8 +100,8 @@ module Orgmode
 
     # We are leaving a mode. Close any tags that were opened when
     # entering this mode.
-    def pop_mode(mode = nil)
-      m = super(mode)
+    def pop_mode
+      m = super
       return list_indent_stack.pop unless html_tags.include?(m)
       return list_indent_stack.pop if skip_css?(m)
 

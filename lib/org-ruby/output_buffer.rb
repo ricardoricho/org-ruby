@@ -45,7 +45,7 @@ module Orgmode
       list_indent_stack.push(indent)
     end
 
-    def pop_mode(_mode = nil)
+    def pop_mode
       mode_stack.pop
     end
 
