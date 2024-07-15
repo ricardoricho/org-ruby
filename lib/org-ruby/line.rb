@@ -62,7 +62,13 @@ module Orgmode
     # Determines if a line is an orgmode "headline":
     # A headline begins with one or more asterisks.
     def headline?
-      RegexpHelper.headline.match(to_s)
+      RegexpHelper.headline.match(@line)
+    end
+
+    def footnote?
+      RegexpHelper.footnote_definition.match(@line) ||
+        RegexpHelper.footnote_reference.match(@line)
+    end
     end
 
     def property_drawer_begin_block?

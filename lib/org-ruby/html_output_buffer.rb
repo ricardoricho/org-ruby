@@ -237,11 +237,11 @@ module Orgmode
     # added to a separate Footnotes section at the end of the document. All footnotes that are
     # defined separately from their references will be rendered where they appear in the original
     # Org document.
-    def output_footnotes!
-      return if !options[:export_footnotes] || @footnotes.empty?
+    def output_footnotes!(footnotes = [])
+      return if !options[:export_footnotes] || footnotes.empty?
 
       @output.concat footnotes_header
-      @footnotes.each do |footnote|
+      footnotes.each do |footnote|
         @buffer = footnote[:content].empty? && footnote[:label] || footnote[:content]
         a_href = footnote[:index]
         @output << "<div class=\"footdef\"><sup><a id=\"fn.#{a_href}\" class=\"footnum\" href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>" \
@@ -391,8 +391,6 @@ module Orgmode
 
       if @options[:export_footnotes]
         @re_help.capture_footnote_definition(str) do |label, content|
-          footnote = @footnotes.find { |footnote| footnote[:label] == label }
-          footnote[:content] = content unless footnote.nil?
           # Capture definition and replace it with nil
           nil
         end

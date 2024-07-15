@@ -30,6 +30,26 @@ describe Orgmode::Line do
     end
   end
 
+  describe "footnote?" do
+    let(:line) { Orgmode::Line.new(footnote) }
+
+    context "when it's a definition footnotes" do
+      let(:footnote) { "[fn:label] An its definition" }
+
+      it { expect(line.footnote?).to be_truthy }
+    end
+
+    context "when it's a reference footnote" do
+      let(:footnote) { "This line has [fn:a:footnote:with definition]" }
+      it { expect(line.footnote?).to be_truthy }
+    end
+
+    context "recognize anonymous footnotes" do
+      let(:footnote) { "Also works [fn::Anonymous] footnotes" }
+
+      it { expect(line.footnote?).to be_truthy }
+    end
+  end
   it "should tell blank lines" do
     blank = ["", " ", "\t", "\n", "  \t\t\n\n"]
     blank.each do |b|

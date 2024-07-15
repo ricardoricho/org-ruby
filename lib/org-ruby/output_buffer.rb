@@ -169,6 +169,10 @@ module Orgmode
       nil
     end
 
+    def output_footnotes!(footnotes = [])
+      # Implement in output buffers
+    end
+
     protected
 
     attr_reader :block_lang
@@ -255,10 +259,6 @@ module Orgmode
 
     def add_headline_id(line)
       # Implement this in output buffers
-    end
-
-    def output_footnotes!
-      # Implement in output buffers
     end
 
     # Tests if the current line should be accumulated in the current

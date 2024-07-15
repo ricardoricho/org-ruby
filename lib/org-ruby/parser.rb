@@ -27,6 +27,8 @@ module Orgmode
     # Array of custom keywords.
     attr_reader :custom_keywords
 
+    attr_reader :footnotes
+
     # Regexp that recognizes words in custom_keywords.
     def custom_keyword_regexp
       return nil if @custom_keywords.empty?
@@ -100,6 +102,7 @@ module Orgmode
       @lines = initialize_lines(lines)
       @custom_keywords = []
       @current_headline = nil
+      @footnotes = []
       @in_buffer_settings = {}
       @headlines = []
       @header_lines = []
@@ -168,6 +171,21 @@ module Orgmode
         if line.link_abbrev?
           link_abbrev_data = line.link_abbrev_data
           @link_abbrevs[link_abbrev_data[0]] = link_abbrev_data[1]
+        end
+
+        # Store footnotes
+        if line.footnote?
+          line.store_footnote do |label, content|
+            footnote = @footnotes.find { |footnote| footnote[:label] == label }
+
+            if footnote.nil?
+              footnote_index = @footnotes.length + 1
+              footnote = { index: footnote_index, label: label, content: content }
+              @footnotes.push(footnote)
+            else
+              footnote[:content] = content
+            end
+          end
         end
 
         if (line.end_block? && [line.paragraph_type, :comment].include?(mode)) ||
@@ -309,13 +327,13 @@ module Orgmode
     # Saves the loaded orgmode file as a textile file.
     def to_textile
       output = ''
-      output_buffer = TextileOutputBuffer.new(output)
+      output_buffer = TextileOutputBuffer.new(output, document)
 
       translate(@header_lines, output_buffer)
       @headlines.each do |headline|
         translate(headline.body_lines, output_buffer)
       end
-      output_buffer.output_footnotes!
+      output_buffer.output_footnotes!(@footnotes)
       output
     end
 
@@ -392,7 +410,7 @@ module Orgmode
           translate(headline.body_lines, output_buffer)
         end
       end
-      output_buffer.output_footnotes!
+      output_buffer.output_footnotes!(footnotes)
     end
 
     # Converts an array of lines to the appropriate format.

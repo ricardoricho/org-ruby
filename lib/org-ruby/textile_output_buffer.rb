@@ -80,9 +80,7 @@ module Orgmode
         end
       end
 
-      @re_help.capture_footnote_definition(input) do |label, content|
-        footnote = @footnotes.find { |footnote| footnote[:label] == label }
-        footnote[:content] = content&.strip unless footnote.nil?
+      @re_help.capture_footnote_definition(input) do |_label, _content|
         # Capture definition and replace it with nil
         nil
       end
@@ -106,11 +104,11 @@ module Orgmode
       input
     end
 
-    def output_footnotes!
+    def output_footnotes!(footnotes = [])
       return if @footnotes.empty?
 
-      @footnotes.each do |footnote|
-        @output << "\nfn#{footnote[:index]}. #{footnote[:content] || 'DEFINITION NOT FOUND' }\n"
+      footnotes.each do |footnote|
+        @output << "\nfn#{footnote[:index]}. #{footnote[:content].lstrip || 'DEFINITION NOT FOUND' }\n"
       end
     end
 
