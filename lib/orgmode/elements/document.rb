@@ -8,6 +8,8 @@ module Orgmode
       end
 
       def store_footnote(line)
+        return unless line.footnote?
+
         if RegexpHelper.footnote_definition.match(line.to_s)
           match = Regexp.last_match
           label = match[:label]
@@ -26,7 +28,6 @@ module Orgmode
         else
           footnote[:content] = content
         end
-        @footnotes.push(footnote)
       end
     end
   end

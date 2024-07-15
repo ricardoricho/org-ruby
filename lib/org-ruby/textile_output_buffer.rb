@@ -3,11 +3,10 @@ require 'stringio'
 module Orgmode
   class TextileOutputBuffer < OutputBuffer
 
-    def initialize(output)
-      super(output)
+    def initialize(output, document = nil)
+      super(output, document)
       @add_paragraph = true
       @support_definition_list = true # TODO this should be an option
-      @footnotes = []
     end
 
     def push_mode(mode, indent, properties={})
@@ -88,12 +87,8 @@ module Orgmode
       @re_help.rewrite_footnote(input) do |label, content|
         # textile only support numerical names, so we need to do some conversion
         # Try to find the footnote and use its index
-        footnote = @footnotes.find { |footnote| footnote[:label] == label }
-        if footnote.nil?
-          footnote = { index: @footnotes.length + 1, label: label, content: content }
-          @footnotes.push(footnote)
-        else
-          footnote[:content] = content&.strip
+        footnote = document.footnotes.find do |footnote|
+          footnote[:label] == label || footnote[:content] == content
         end
 
         "[#{footnote[:index]}]"
@@ -104,10 +99,10 @@ module Orgmode
       input
     end
 
-    def output_footnotes!(footnotes = [])
-      return if @footnotes.empty?
+    def output_footnotes!
+      return if document.footnotes.empty?
 
-      footnotes.each do |footnote|
+      document.footnotes.each do |footnote|
         @output << "\nfn#{footnote[:index]}. #{footnote[:content].lstrip || 'DEFINITION NOT FOUND' }\n"
       end
     end

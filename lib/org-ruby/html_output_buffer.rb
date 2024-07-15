@@ -26,11 +26,10 @@ module Orgmode
 
     attr_reader :options
 
-    def initialize(output, opts = {})
-      super(output)
+    def initialize(output, document = nil, opts = {})
+      super(output, document)
       @options = opts
       @new_paragraph = :start
-      @footnotes = []
       @unclosed_tags = []
 
       # move from output_buffer
@@ -237,11 +236,11 @@ module Orgmode
     # added to a separate Footnotes section at the end of the document. All footnotes that are
     # defined separately from their references will be rendered where they appear in the original
     # Org document.
-    def output_footnotes!(footnotes = [])
-      return if !options[:export_footnotes] || footnotes.empty?
+    def output_footnotes!
+      return if !options[:export_footnotes] || document.footnotes.empty?
 
       @output.concat footnotes_header
-      footnotes.each do |footnote|
+      document.footnotes.each do |footnote|
         @buffer = footnote[:content].empty? && footnote[:label] || footnote[:content]
         a_href = footnote[:index]
         @output << "<div class=\"footdef\"><sup><a id=\"fn.#{a_href}\" class=\"footnum\" href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>" \
@@ -397,14 +396,8 @@ module Orgmode
 
         # Reference footnote
         @re_help.rewrite_footnote str do |label, content|
-          footnote = @footnotes.find { |footnote| footnote[:label] == label }
-
-          if footnote.nil?
-            footnote_index = @footnotes.length + 1
-            footnote = { index: footnote_index, label: label, content: content }
-            @footnotes.push(footnote)
-          else
-            footnote[:content] = content
+          footnote = document.footnotes.find do |footnote|
+            footnote[:label] == label || footnote[:content] == content
           end
 
           a_id = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]

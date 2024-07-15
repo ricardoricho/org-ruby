@@ -27,8 +27,6 @@ module Orgmode
     # Array of custom keywords.
     attr_reader :custom_keywords
 
-    attr_reader :footnotes
-
     # Regexp that recognizes words in custom_keywords.
     def custom_keyword_regexp
       return nil if @custom_keywords.empty?
@@ -102,7 +100,7 @@ module Orgmode
       @lines = initialize_lines(lines)
       @custom_keywords = []
       @current_headline = nil
-      @footnotes = []
+      @document = Orgmode::Elements::Document.new
       @in_buffer_settings = {}
       @headlines = []
       @header_lines = []
@@ -174,19 +172,7 @@ module Orgmode
         end
 
         # Store footnotes
-        if line.footnote?
-          line.store_footnote do |label, content|
-            footnote = @footnotes.find { |footnote| footnote[:label] == label }
-
-            if footnote.nil?
-              footnote_index = @footnotes.length + 1
-              footnote = { index: footnote_index, label: label, content: content }
-              @footnotes.push(footnote)
-            else
-              footnote[:content] = content
-            end
-          end
-        end
+        document.store_footnote(line)
 
         if (line.end_block? && [line.paragraph_type, :comment].include?(mode)) ||
            (line.property_drawer_end_block? && (mode == :property_drawer))
@@ -333,7 +319,7 @@ module Orgmode
       @headlines.each do |headline|
         translate(headline.body_lines, output_buffer)
       end
-      output_buffer.output_footnotes!(@footnotes)
+      output_buffer.output_footnotes!
       output
     end
 
@@ -358,8 +344,8 @@ module Orgmode
         decorate_title: in_buffer_settings['TITLE'],
         export_heading_number: export_heading_number?,
         export_todo: export_todo?,
-        use_sub_superscripts: use_sub_superscripts?,
         export_footnotes: export_footnotes?,
+        use_sub_superscripts: use_sub_superscripts?,
         link_abbrevs: @link_abbrevs,
         skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
         markup_file: @parser_options[:markup_file],
@@ -369,8 +355,7 @@ module Orgmode
       }
       export_options[:skip_tables] = true unless export_tables?
       output = ''
-      output_buffer = HtmlOutputBuffer.new(output, export_options)
-
+      output_buffer = HtmlOutputBuffer.new(output, document, export_options)
       if title?
         # If we're given a new title, then just create a new line
         # for that title.
@@ -398,7 +383,10 @@ module Orgmode
       in_buffer_settings['TITLE']
     end
 
-    ######################################################################
+    protected
+
+    attr_reader :document
+
     private
 
     def translate_headlines(headlines, output_buffer)
@@ -410,7 +398,7 @@ module Orgmode
           translate(headline.body_lines, output_buffer)
         end
       end
-      output_buffer.output_footnotes!(footnotes)
+      output_buffer.output_footnotes!
     end
 
     # Converts an array of lines to the appropriate format.

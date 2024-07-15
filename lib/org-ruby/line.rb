@@ -69,7 +69,6 @@ module Orgmode
       RegexpHelper.footnote_definition.match(@line) ||
         RegexpHelper.footnote_reference.match(@line)
     end
-    end
 
     def property_drawer_begin_block?
       match = RegexpHelper.drawer.match(@line)
