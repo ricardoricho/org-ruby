@@ -19,8 +19,8 @@ module Orgmode
       super(mode, indent, properties)
     end
 
-    def pop_mode(mode = nil)
-      m = super(mode)
+    def pop_mode
+      m = super
       @list_indent_stack.pop
       m
     end

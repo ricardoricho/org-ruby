@@ -10,7 +10,7 @@ module Orgmode
     attr_reader :output, :mode_stack, :list_indent_stack
 
     # This is the current type of output being accumulated.
-    attr_accessor :output_type, :headline_number_stack
+    attr_accessor :output_type, :headline_number_stack, :custom_blocktags
 
     # Creates a new OutputBuffer object that is bound to an output object.
     # The output will get flushed to =output=.
@@ -28,6 +28,7 @@ module Orgmode
       @output_type = :start
       @list_indent_stack = []
       @mode_stack = []
+      @custom_blocktags = []
 
       # regexp module
       @re_help = RegexpHelper.new
@@ -45,7 +46,7 @@ module Orgmode
       list_indent_stack.push(indent)
     end
 
-    def pop_mode(_mode = nil)
+    def pop_mode
       mode_stack.pop
     end
 
@@ -131,26 +132,23 @@ module Orgmode
     end
 
     def do_custom_markup
-      if File.exist?(@options[:markup_file])
-        load_custom_markup
-        if @custom_blocktags.empty?
-          no_valid_markup_found
-        else
-          set_custom_markup
-        end
-      else
-        no_custom_markup_file_exist
-      end
+      file = @options[:markup_file]
+      return unless file
+      return no_custom_markup_file_exist unless File.exist?(file)
+
+      @custom_blocktags = load_custom_markup(file)
+      @custom_blocktags.empty? && no_valid_markup_found ||
+        set_custom_markup
     end
 
-    def load_custom_markup
+    def load_custom_markup(file)
       require 'yaml'
       filter = if self.class.to_s == 'Orgmode::MarkdownOutputBuffer'
                  '^MarkdownMap$'
                else
                  '^HtmlBlockTag$|^Tags$'
                end
-      @custom_blocktags = YAML.load_file(@options[:markup_file]).select do |k|
+      YAML.load_file(@options[:markup_file]).select do |k|
         k.to_s.match(filter)
       end
     end

@@ -43,6 +43,12 @@ module Orgmode
       'HTML'
     end
 
+    def close_tag(mode)
+      closing_tag = HtmlBlockTag[mode]
+      strip_tag = closing_tag.split(' ').first
+      "</#{strip_tag}>"
+    end
+
     # Output buffer is entering a new mode. Use this opportunity to
     # write out one of the block tags in the HtmlBlockTag constant to
     # put this information in the HTML stream.
@@ -100,13 +106,13 @@ module Orgmode
 
     # We are leaving a mode. Close any tags that were opened when
     # entering this mode.
-    def pop_mode(mode = nil)
-      m = super(mode)
-      return list_indent_stack.pop unless html_tags.include?(m)
-      return list_indent_stack.pop if skip_css?(m)
+    def pop_mode
+      mode = super
+      return list_indent_stack.pop unless html_tags.include?(mode)
+      return list_indent_stack.pop if skip_css?(mode)
 
       push_indentation(@new_paragraph)
-      @output.concat("</#{HtmlBlockTag[m]}>")
+      @output.concat close_tag(mode)
       list_indent_stack.pop
     end
 
@@ -258,31 +264,6 @@ module Orgmode
       super || current_mode == :html
     end
 
-    protected
-
-    def do_custom_markup
-      file = options[:markup_file]
-      return unless file
-      return no_custom_markup_file_exist unless File.exist?(file)
-
-      @custom_blocktags = load_custom_markup(file)
-      @custom_blocktags.empty? && no_valid_markup_found ||
-        set_custom_markup
-    end
-
-    def load_custom_markup(file)
-      require 'yaml'
-      if (self.class.to_s == 'Orgmode::MarkdownOutputBuffer')
-        filter = '^MarkdownMap$'
-      else
-        filter = '^HtmlBlockTag$|^Tags$'
-      end
-      @custom_blocktags = YAML.load_file(@options[:markup_file]).select {|k| k.to_s.match(filter) }
-    end
-
-
-
-    ######################################################################
     private
 
     def get_css_attr(mode)

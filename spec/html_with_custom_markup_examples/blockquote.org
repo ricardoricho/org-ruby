@@ -11,3 +11,7 @@ This is blockquote text.
 #+END_QUOTE
 
 And now I'm back to normal text!
+
+#+BEGIN_CENTER
+  Center with custom tag
+#+END_CENTER
