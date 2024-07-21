@@ -345,6 +345,21 @@ EXAMPLE
     end
   end
 
+  describe "wrap html output" do
+    base_dir = File.join(File.dirname(__FILE__), "html_examples")
+    org_file = File.join(base_dir, "left-to-right.org")
+    html_file = File.join(base_dir, "wrap-html.html")
+    css_files = %w[monokai.css]
+
+    it 'include css files' do
+      expected = IO.read(html_file)
+      options = { wrap_html: { css_files: css_files } }
+      parser = Orgmode::Parser.new(IO.read(org_file), options)
+      actual = parser.to_html
+      expect(actual).to eq(expected)
+    end
+  end
+
   describe "Export to Markdown test cases" do
     data_directory = File.join(File.dirname(__FILE__), "markdown_examples")
     org_files = File.expand_path(File.join(data_directory, "*.org" ))

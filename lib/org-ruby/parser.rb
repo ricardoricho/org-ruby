@@ -344,20 +344,24 @@ module Orgmode
       mark_trees_for_export
       export_options = {
         decorate_title: in_buffer_settings['TITLE'],
+        export_footnotes: export_footnotes?,
         export_heading_number: export_heading_number?,
         export_todo: export_todo?,
-        export_footnotes: export_footnotes?,
-        use_sub_superscripts: use_sub_superscripts?,
-        link_abbrevs: @link_abbrevs,
-        skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
-        markup_file: @parser_options[:markup_file],
         footnotes_title: @parser_options[:footnotes_title],
+        generate_heading_id: @parser_options[:generate_heading_id],
+        link_abbrevs: @link_abbrevs,
         ltr: left_to_right?,
-        generate_heading_id: @parser_options[:generate_heading_id]
+        markup_file: @parser_options[:markup_file],
+        skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
+        use_sub_superscripts: use_sub_superscripts?
       }
       export_options[:skip_tables] = true unless export_tables?
       output = StringIO.new
       output_buffer = HtmlOutputBuffer.new(output, document, export_options)
+
+      document.title = title || document.headlines.first&.output_text
+      output_buffer.wrap_html(@parser_options[:wrap_html])
+
       if title?
         # If we're given a new title, then just create a new line
         # for that title.
@@ -368,8 +372,11 @@ module Orgmode
 
       # If we've output anything at all, remove the :decorate_title option.
       export_options.delete(:decorate_title) if output.length > 0
-      translate_headlines(@headlines, output_buffer)
-      output << "\n"
+      document.headlines.each do |headline|
+        translate(headline.body, output_buffer)
+      end
+      output_buffer.output_footnotes!
+      output_buffer.close(@parser_options[:wrap_html])
 
       return output.string if @parser_options[:skip_rubypants_pass]
 

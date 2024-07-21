@@ -48,11 +48,11 @@ From Ruby:
 The supported output exporters can be also called from the command line:
 
 #+BEGIN_SRC sh
-     org-ruby --translate html         sample.org
-     org-ruby --translate textile      sample.org
-     org-ruby --translate markdown     sample.org
-     org-ruby --markup html.tags.yml   sample.org
-     org-ruby --markup md.tags.yml --translate markdown sample.org
+  org-ruby --translate html         sample.org
+  org-ruby --translate textile      sample.org
+  org-ruby --translate markdown     sample.org
+  org-ruby --markup html.tags.yml   sample.org
+  org-ruby --markup md.tags.yml --translate markdown sample.org
 #+END_SRC
 
 ** Current status
@@ -194,7 +194,7 @@ Markdown, your YAML file should look like this:
 
 ** License
 
-#+BEGIN_SRC
+#+BEGIN_QUOTE
  (The MIT License)
 
  Copyright (c) 2009 Brian Dewey
@@ -217,4 +217,4 @@ Markdown, your YAML file should look like this:
  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#+END_SRC
+#+END_QUOTE

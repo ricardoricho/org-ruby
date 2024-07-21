@@ -9,11 +9,11 @@ specs:
     - bundle exec rspec
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
 
 pages:
   script:
-    - bundle exec rspec
-    - bundle exec rake documentation:build
+    - bundle exec rake gitlab:page
   artifacts:
     paths:
       # The folder that contains the files to be exposed at the Page URL

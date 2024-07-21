@@ -42,6 +42,40 @@ module Orgmode
       end
     end
 
+    describe '#wrap_html' do
+      let(:document) { double }
+      let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, document, parser_options)}
+
+      context 'when parser options include wrap_html' do
+        before do
+          allow(document).to receive(:title) { "Title" }
+        end
+
+        let(:parser_options) { { wrap_html: { title: "Foo" } } }
+        it 'insert html headers into output' do
+          buffer.wrap_html(parser_options[:wrap_html])
+          expect(output.string).to eq "<!DOCTYPE html>\n<html>\n  <head>\n    <title>Title</title>\n\n  </head>\n  <body>\n"
+        end
+      end
+
+      context 'when wrap_html inlcude css_files' do
+        let(:css_files) { ["monokai.css"]}
+
+        before do
+          allow(document).to receive(:title) { "Title" }
+        end
+
+        let(:parser_options) { { wrap_html: { css_files: css_files } } }
+        it 'insert html head and link of files' do
+          prefix = "<!DOCTYPE html>\n<html>\n  <head>\n    <title>Title</title>\n"
+          sufix ="\n  </head>\n  <body>\n"
+          linkrel = "    <link rel=\"stylesheet\" type=\"text/css\" href=\"monokai.css\">"
+          buffer.wrap_html(parser_options[:wrap_html])
+          expect(output.string).to eq prefix + linkrel + sufix
+        end
+      end
+    end
+
     describe '#push_mode' do
       before do
         output.write "Buffer"

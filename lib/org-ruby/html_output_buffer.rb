@@ -46,6 +46,28 @@ module Orgmode
       "</#{strip_tag}>"
     end
 
+    def wrap_html(options = {})
+      return if options.nil? || options.empty?
+
+      output.write "<!DOCTYPE html>\n<html>\n  <head>\n    <title>#{document.title}</title>\n#{link_stylesheets(options[:css_files]).join("\n")}\n  </head>\n  <body>\n"
+    end
+
+    def link_stylesheets(files = [])
+      return [] if files.nil?
+
+      files.map do |file|
+        "    <link rel=\"stylesheet\" type=\"text/css\" href=\"#{file}\">"
+      end
+    end
+
+    def close(close_html)
+      if close_html
+        output.write "\n  </body>\n</html>\n"
+      else
+        output.write "\n"
+      end
+    end
+
     # Output buffer is entering a new mode. Use this opportunity to
     # write out one of the block tags in the HtmlBlockTag constant to
     # put this information in the HTML stream.

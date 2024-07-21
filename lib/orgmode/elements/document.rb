@@ -1,11 +1,13 @@
 module Orgmode
   module Elements
     class Document
-      attr_reader :footnotes, :targets
+      attr_reader :headlines, :footnotes, :targets
+      attr_accessor :title
 
       def initialize
         @footnotes = []
         @targets = []
+        @title = ""
       end
 
       def store_footnote(line)
