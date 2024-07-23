@@ -1,18 +1,18 @@
 
 h2. Footnotes
 
-p. Using numbers [0]
+p. Using numbers [1]
 
-p. Using letters and not defined in the footnote [1]
+p. Using letters and not defined in the footnote [2]
 
-p. Using letters and defined in the footnote [1]
+p. Using letters and defined in the footnote [2]
 
-p. Defined in the footnote itself with markup [2]
+p. Defined in the footnote itself with markup [3]
 
-p. [0] Definition of first footnote
+p. 
 
-fn0. DEFINITION NOT FOUND
+fn1. Definition of first footnote
 
-fn1. definition of abc
+fn2. definition of abc
 
-fn2. *blub*
+fn3. *blub*

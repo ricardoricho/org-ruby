@@ -1,20 +1,18 @@
 require 'stringio'
 
 module Orgmode
-
   class TextileOutputBuffer < OutputBuffer
 
-    def initialize(output)
-      super(output)
+    def initialize(output, document = nil)
+      super(output, document)
       @add_paragraph = true
       @support_definition_list = true # TODO this should be an option
-      @footnotes = []
     end
 
     def push_mode(mode, indent, properties={})
       super(mode, indent, properties)
       @output << "bc. " if mode_is_code? mode
-      if mode == :center or mode == :quote
+      if mode == :center || mode == :quote
         @add_paragraph = false
         @output << "\n"
       end
@@ -23,7 +21,7 @@ module Orgmode
     def pop_mode
       m = super
       @list_indent_stack.pop
-      if m == :center or m == :quote
+      if m == :center || m == :quote
         @add_paragraph = true
         @output << "\n"
       end
@@ -46,13 +44,15 @@ module Orgmode
         m = TextileMap[marker]
         "#{m}#{body}#{m}"
       end
+
       @re_help.rewrite_subp input do |type, text|
-        if type == "_" then
+        if type == "_"
           "~#{text}~"
-        elsif type == "^" then
+        elsif type == "^"
           "^#{text}^"
         end
       end
+
       @re_help.rewrite_links input do |link, defi|
         [link, defi].compact.each do |text|
           # We don't support search links right now. Get rid of it.
@@ -78,35 +78,33 @@ module Orgmode
           "!#{link}(#{link})!"
         end
       end
-      @re_help.rewrite_footnote input do |name, definition|
+
+      @re_help.capture_footnote_definition(input) do |_label, _content|
+        # Capture definition and replace it with nil
+        nil
+      end
+
+      @re_help.rewrite_footnote(input) do |label, content|
         # textile only support numerical names, so we need to do some conversion
         # Try to find the footnote and use its index
-        footnote = @footnotes.select {|f| f[:name] == name }.first
-        if footnote
-          # The latest definition overrides other ones
-          footnote[:definition] = definition if definition and not footnote[:definition]
-        else
-          # There is no footnote with the current name so we add it
-          footnote = { :name => name, :definition => definition }
-          @footnotes << footnote
+        footnote = document.footnotes.find do |footnote|
+          footnote[:label] == label || footnote[:content] == content
         end
 
-        "[#{@footnotes.index(footnote)}]"
+        "[#{footnote[:index]}]"
       end
+
       Orgmode.special_symbols_to_textile(input)
       input = @re_help.restore_code_snippets input
       input
     end
 
     def output_footnotes!
-      return false if @footnotes.empty?
+      return if document.footnotes.empty?
 
-      @footnotes.each do |footnote|
-        index = @footnotes.index(footnote)
-        @output << "\nfn#{index}. #{footnote[:definition] || 'DEFINITION NOT FOUND' }\n"
+      document.footnotes.each do |footnote|
+        @output << "\nfn#{footnote[:index]}. #{footnote[:content].lstrip || 'DEFINITION NOT FOUND' }\n"
       end
-
-      return true
     end
 
     # Flushes the current buffer
@@ -150,5 +148,5 @@ module Orgmode
     def add_line_attributes headline
       @output << "h#{headline.level}. "
     end
-  end                           # class TextileOutputBuffer
-end                             # module Orgmode
+  end
+end

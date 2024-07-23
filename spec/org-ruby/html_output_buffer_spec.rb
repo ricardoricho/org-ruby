@@ -16,9 +16,27 @@ module Orgmode
         expect(buffer.buffer_tag).to eq 'HTML'
       end
 
+      context 'when call with a document' do
+        let(:document) { "This is a document" }
+        let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, document)}
+
+        it 'has a document' do
+          expect(buffer.document).to eq document
+        end
+
+        it 'has empty options' do
+          expect(buffer.options).to be_empty
+        end
+      end
+
       context 'when call with options' do
         let(:options) { { option: 'value'} }
-        let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, options)}
+        let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, nil, options)}
+
+        it 'has nil document' do
+          expect(buffer.document).to be_nil
+        end
+
         it 'has options' do
           expect(buffer.options).to eq options
         end
@@ -64,7 +82,7 @@ module Orgmode
           let(:mode) { :src }
 
           context 'when Buffer options include skip_syntax_highlight = true' do
-            let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, { skip_syntax_highlight: true })}
+            let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, nil, { skip_syntax_highlight: true })}
             before(:each) do
               allow(buffer).to receive(:block_lang).and_return('')
             end

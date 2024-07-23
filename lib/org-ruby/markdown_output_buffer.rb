@@ -69,11 +69,6 @@ module Orgmode
       input
     end
 
-    # TODO: Implement this
-    def output_footnotes!
-      return false
-    end
-
     # Flushes the current buffer
     def flush!
       return false if @buffer.empty? and @output_type != :blank

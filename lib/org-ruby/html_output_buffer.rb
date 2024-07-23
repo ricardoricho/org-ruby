@@ -26,11 +26,10 @@ module Orgmode
 
     attr_reader :options
 
-    def initialize(output, opts = {})
-      super(output)
+    def initialize(output, document = nil, opts = {})
+      super(output, document)
       @options = opts
       @new_paragraph = :start
-      @footnotes = {}
       @unclosed_tags = []
 
       # move from output_buffer
@@ -218,7 +217,7 @@ module Orgmode
     end
 
     def html_buffer_code_block_indent(line)
-      if mode_is_code?(current_mode) && !(line.block_type)
+      if mode_is_code?(current_mode) && !line.block_type
         # Determines the amount of whitespaces to be stripped at the
         # beginning of each line in code block.
         if line.paragraph_type != :blank
@@ -238,20 +237,19 @@ module Orgmode
     # defined separately from their references will be rendered where they appear in the original
     # Org document.
     def output_footnotes!
-      return false if !options[:export_footnotes] || @footnotes.empty?
+      return if !options[:export_footnotes] || document.footnotes.empty?
 
       @output.concat footnotes_header
-      @footnotes.each do |name, (defi, content)|
-        @buffer = defi
-        @output << "<div class=\"footdef\"><sup><a id=\"fn.#{name}\" href=\"#fnr.#{name}\">#{name}</a></sup>" \
-                << "<p class=\"footpara\">" \
+      document.footnotes.each do |footnote|
+        @buffer = footnote[:content].empty? && footnote[:label] || footnote[:content]
+        a_href = footnote[:index]
+        @output << "<div class=\"footdef\"><sup><a id=\"fn.#{a_href}\" class=\"footnum\" href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>" \
+                << "<div class=\"footpara\" role=\"doc-footnote\"><p class=\"footpara\">" \
                 << inline_formatting(@buffer) \
-                << "</p></div>\n"
+                << "</p></div></div>\n"
       end
 
       @output.concat "</div>\n</div>"
-
-      true
     end
 
     def footnotes_header
@@ -390,16 +388,24 @@ module Orgmode
         str.gsub!(/\s*\|\s*/, quote_tags("</th><th>"))
       end
 
-      if @options[:export_footnotes] then
-        @re_help.rewrite_footnote_definition str do |name, content|
-          quote_tags("<sup><a id=\"fn.#{name}\" class=\"footnum\" href=\"#fnr.#{name}\">") +
-            name + quote_tags("</a></sup> ") + content
+      if @options[:export_footnotes]
+        @re_help.capture_footnote_definition(str) do |label, content|
+          # Capture definition and replace it with nil
+          nil
         end
 
-        @re_help.rewrite_footnote str do |name, defi|
-          @footnotes[name] = defi if defi
-          quote_tags("<sup><a id=\"fnr.#{name}\" class=\"footref\" href=\"#fn.#{name}\">") +
-            name + quote_tags("</a></sup>")
+        # Reference footnote
+        @re_help.rewrite_footnote str do |label, content|
+          footnote = document.footnotes.find do |footnote|
+            footnote[:label] == label || footnote[:content] == content
+          end
+
+          a_id = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
+          a_text = footnote[:index]
+          a_href = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
+
+          footnote_tag = "<sup><a id=\"fnr.#{a_id}\" class=\"footref\" href=\"#fn.#{a_href}\" role=\"doc-backlink\">#{a_text}</a></sup>"
+          quote_tags(footnote_tag)
         end
       end
 

@@ -7,14 +7,14 @@ module Orgmode
   # add a newline character prior emitting the output.
   class OutputBuffer
     # This is the overall output buffer
-    attr_reader :output, :mode_stack, :list_indent_stack
+    attr_reader :output, :mode_stack, :list_indent_stack, :document
 
     # This is the current type of output being accumulated.
     attr_accessor :output_type, :headline_number_stack, :custom_blocktags
 
     # Creates a new OutputBuffer object that is bound to an output object.
     # The output will get flushed to =output=.
-    def initialize(output)
+    def initialize(output, document = nil)
       # This is the accumulation buffer. It's a holding pen so
       # consecutive lines of the right type can get stuck together
       # without intervening newlines.
@@ -29,6 +29,7 @@ module Orgmode
       @list_indent_stack = []
       @mode_stack = []
       @custom_blocktags = []
+      @document = document
 
       # regexp module
       @re_help = RegexpHelper.new
@@ -169,6 +170,10 @@ module Orgmode
       nil
     end
 
+    def output_footnotes!
+      # Implement in output buffers
+    end
+
     protected
 
     attr_reader :block_lang
@@ -255,10 +260,6 @@ module Orgmode
 
     def add_headline_id(line)
       # Implement this in output buffers
-    end
-
-    def output_footnotes!
-      false
     end
 
     # Tests if the current line should be accumulated in the current

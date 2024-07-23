@@ -57,7 +57,7 @@ module Orgmode
 
     # Returns true if we are to export footnotes
     def export_footnotes?
-      "t" == @options["f"]
+      "nil" != @options["f"]
     end
 
     # Returns true if we are to export heading numbers.
@@ -97,14 +97,15 @@ module Orgmode
     # I can construct a parser object either with an array of lines
     # or with a single string that I will split along \n boundaries.
     def initialize(lines, parser_options = {})
-      @lines = initialize_lines lines
+      @lines = initialize_lines(lines)
       @custom_keywords = []
-      @headlines = []
       @current_headline = nil
-      @header_lines = []
+      @document = Orgmode::Elements::Document.new
       @in_buffer_settings = {}
-      @options = {}
+      @headlines = []
+      @header_lines = []
       @link_abbrevs = {}
+      @options = {}
       @parser_options = parser_options
 
       #
@@ -169,6 +170,9 @@ module Orgmode
           link_abbrev_data = line.link_abbrev_data
           @link_abbrevs[link_abbrev_data[0]] = link_abbrev_data[1]
         end
+
+        # Store footnotes
+        document.store_footnote(line)
 
         if (line.end_block? && [line.paragraph_type, :comment].include?(mode)) ||
            (line.property_drawer_end_block? && (mode == :property_drawer))
@@ -309,12 +313,13 @@ module Orgmode
     # Saves the loaded orgmode file as a textile file.
     def to_textile
       output = ''
-      output_buffer = TextileOutputBuffer.new(output)
+      output_buffer = TextileOutputBuffer.new(output, document)
 
       translate(@header_lines, output_buffer)
       @headlines.each do |headline|
         translate(headline.body_lines, output_buffer)
       end
+      output_buffer.output_footnotes!
       output
     end
 
@@ -339,8 +344,8 @@ module Orgmode
         decorate_title: in_buffer_settings['TITLE'],
         export_heading_number: export_heading_number?,
         export_todo: export_todo?,
-        use_sub_superscripts: use_sub_superscripts?,
         export_footnotes: export_footnotes?,
+        use_sub_superscripts: use_sub_superscripts?,
         link_abbrevs: @link_abbrevs,
         skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
         markup_file: @parser_options[:markup_file],
@@ -350,8 +355,7 @@ module Orgmode
       }
       export_options[:skip_tables] = true unless export_tables?
       output = ''
-      output_buffer = HtmlOutputBuffer.new(output, export_options)
-
+      output_buffer = HtmlOutputBuffer.new(output, document, export_options)
       if title?
         # If we're given a new title, then just create a new line
         # for that title.
@@ -379,7 +383,10 @@ module Orgmode
       in_buffer_settings['TITLE']
     end
 
-    ######################################################################
+    protected
+
+    attr_reader :document
+
     private
 
     def translate_headlines(headlines, output_buffer)
@@ -391,6 +398,7 @@ module Orgmode
           translate(headline.body_lines, output_buffer)
         end
       end
+      output_buffer.output_footnotes!
     end
 
     # Converts an array of lines to the appropriate format.
@@ -400,7 +408,6 @@ module Orgmode
       lines.each { |line| output_buffer.insert(line) }
       output_buffer.flush!
       output_buffer.pop_mode while output_buffer.current_mode
-      output_buffer.output_footnotes!
       output_buffer.output
     end
 
