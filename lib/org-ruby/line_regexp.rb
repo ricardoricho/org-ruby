@@ -74,6 +74,10 @@ module Orgmode
       /^\s*(CLOCK|DEADLINE|START|CLOSED|SCHEDULED):/
     end
 
+    def org_link
+      /\[\[(?<url>[^\[\]]+)\](\[(?<friendly_text>[^\[\]]+)\])?\]/x
+    end
+
     def property_item
       /^\s*:(?<key>[\w\-]+):\s*(?<value>.*)$/
     end
@@ -101,6 +105,10 @@ module Orgmode
 
     def tags
       /\s*:(?<tags>[\w:@]+):\s*$/
+    end
+
+    def target
+      /<{2}(?<content>[^<>\n]+)>{2}/
     end
   end
 end

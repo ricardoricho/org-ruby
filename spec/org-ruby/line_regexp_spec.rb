@@ -181,6 +181,12 @@ module Orgmode
       it { expect(regexp.metadata).to match ' SCHEDULED:' }
     end
 
+    describe '.org-link-regexp' do
+      it { expect(regexp.org_link).to match '[[url][description]]' }
+      it { expect(regexp.org_link).to match '[[url]]' }
+      it { expect(regexp.org_link).to match '[[a][~a~]]' }
+    end
+
     describe '.property_item' do
       it { expect(regexp.property_item).to match ':key:value' }
       it { expect(regexp.property_item).to match ':key: value' }
@@ -233,6 +239,20 @@ module Orgmode
       it { expect(regexp.tags).not_to match ":@tag " }
       it { expect(regexp.tags).not_to match ":@tag :" }
       it { expect(regexp.tags).not_to match "@tag:" }
+    end
+
+    describe '.target' do
+      it { expect(regexp.target).to match "<<Target>>" }
+      it { expect(regexp.target).to match "Line <<Target>>" }
+      it { expect(regexp.target).to match "<<Target>> end" }
+      it 'captures match content' do
+        match = regexp.target.match("Pre <<This is a target>> post")
+        expect(match[:content]).to eq "This is a target"
+      end
+      it { expect(regexp.target).not_to match "<Target>" }
+      it { expect(regexp.target).not_to match "<<Tar\nget>>" }
+      it { expect(regexp.target).not_to match "<<Tar<get>>" }
+      it { expect(regexp.target).not_to match "<<Tar>get>>" }
     end
   end
 end

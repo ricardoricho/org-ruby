@@ -147,7 +147,7 @@ module Orgmode
     # HTML-style link, and that is how things will get recorded in
     # +result+.
     def rewrite_links(str)
-      str.gsub!(org_link_regexp) do |_match|
+      str.gsub!(RegexpHelper.org_link) do |_match|
         yield Regexp.last_match['url'], Regexp.last_match['friendly_text']
       end
       str.gsub!(org_angle_link_text_regexp) do |_match|
@@ -170,10 +170,6 @@ module Orgmode
                  "#{border_forbidden}#{body_regexp}" \
                  "#{border_forbidden})\\2" \
                  "(?=#{post_emphasis})")
-    end
-
-    def org_link_regexp
-      /\[\[(?<url>[^\[\]]+)\](\[(?<friendly_text>[^\[\]]+)\])?\]/x
     end
 
     def org_image_file_regexp

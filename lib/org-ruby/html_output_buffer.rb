@@ -342,6 +342,7 @@ module Orgmode
             quote_tags("</#{Tags[marker][:close]}>")
         end
       end
+      rewrite_targets(str)
 
       if @options[:use_sub_superscripts]
         @re_help.rewrite_subp str do |type, text|
@@ -353,28 +354,7 @@ module Orgmode
         end
       end
 
-      @re_help.rewrite_links str do |link, defi|
-        [link, defi].compact.each do |text|
-          # We don't support search links right now. Get rid of it.
-          text.sub!(/\A(file:[^\s]+)::[^\s]*?\Z/, "\\1")
-          text.sub!(/\Afile(|\+emacs|\+sys):(?=[^\s]+\Z)/, "")
-        end
-
-        # We don't add a description for images in links, because its
-        # empty value forces the image to be inlined.
-        defi ||= link unless link =~ @re_help.org_image_file_regexp
-
-        if defi =~ @re_help.org_image_file_regexp
-          defi = quote_tags "<img src=\"#{defi}\" alt=\"#{defi}\" />"
-        end
-
-        if defi
-          link = @options[:link_abbrevs][link] if @options[:link_abbrevs].has_key? link
-          quote_tags("<a href=\"#{link}\">") + defi + quote_tags("</a>")
-        else
-          quote_tags "<img src=\"#{link}\" alt=\"#{link}\" />"
-        end
-      end
+      rewrite_links(str)
 
       if @output_type == :table_row
         str.gsub!(/^\|\s*/, quote_tags("<td>"))
@@ -395,18 +375,7 @@ module Orgmode
         end
 
         # Reference footnote
-        @re_help.rewrite_footnote str do |label, content|
-          footnote = document.footnotes.find do |footnote|
-            footnote[:label] == label || footnote[:content] == content
-          end
-
-          a_id = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
-          a_text = footnote[:index]
-          a_href = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
-
-          footnote_tag = "<sup><a id=\"fnr.#{a_id}\" class=\"footref\" href=\"#fn.#{a_href}\" role=\"doc-backlink\">#{a_text}</a></sup>"
-          quote_tags(footnote_tag)
-        end
+        rewrite_footnote(str)
       end
 
       # Two backslashes \\ at the end of the line make a line break without breaking paragraph.
@@ -417,6 +386,61 @@ module Orgmode
       escape_string! str
       Orgmode.special_symbols_to_html str
       str = @re_help.restore_code_snippets str
+    end
+
+    def rewrite_footnote(str)
+      @re_help.rewrite_footnote(str) do |label, content|
+        footnote = document.footnotes.find do |footnote|
+          footnote[:label] == label || footnote[:content] == content
+        end
+
+        a_id = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
+        a_text = footnote[:index]
+        a_href = (footnote[:label].nil? || footnote[:label].empty?) ? footnote[:index] : footnote[:label]
+
+        footnote_tag = "<sup><a id=\"fnr.#{a_id}\" class=\"footref\" href=\"#fn.#{a_href}\" role=\"doc-backlink\">#{a_text}</a></sup>"
+        quote_tags(footnote_tag)
+      end
+    end
+
+    def rewrite_links(str)
+      @re_help.rewrite_links(str) do |link, defi|
+        [link, defi].compact.each do |text|
+          text.sub!(/\A(file:[^\s]+)::[^\s]*?\Z/, "\\1")
+          # We don't support search links right now. Get rid of it.
+          text.sub!(/\Afile(|\+emacs|\+sys):(?=[^\s]+\Z)/, "")
+        end
+
+        # We don't add a description for images in links, because its
+        # empty value forces the image to be inlined.
+        defi ||= link unless link =~ @re_help.org_image_file_regexp
+
+        if defi =~ @re_help.org_image_file_regexp
+          defi = quote_tags "<img src=\"#{defi}\" alt=\"#{defi}\" />"
+        end
+
+        if defi
+          link = @options[:link_abbrevs][link] if @options[:link_abbrevs].has_key?(link)
+          target = document.targets.find do |target|
+            target[:content] == defi
+          end
+          link = "#tg.#{target[:index]}" if target
+          quote_tags("<a href=\"#{link}\">") + defi + quote_tags("</a>")
+        else
+          quote_tags "<img src=\"#{link}\" alt=\"#{link}\" />"
+        end
+      end
+    end
+
+    def rewrite_targets(line)
+      line.gsub!(RegexpHelper.target) do |_match|
+        match = Regexp.last_match
+        target = document.targets.find do |target|
+          target[:content] == match[:content]
+        end
+        target_tag = "<span id=\"tg.#{target[:index]}\">#{target[:content]}</span>"
+        quote_tags(target_tag)
+      end
     end
 
     def normalize_lang(lang)

@@ -46,3 +46,9 @@ sections within documents, etc.
 #+LINK: example http://example.com/something
 
 [[example][This is an abbreviated link example]]
+
+* Internal links
+
+  Links with plain text point to [[target]] and each [[link]] has it's own id.
+
+  This is a <<target>> and the <<link>> has ~tg.index~ id.
