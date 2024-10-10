@@ -1,10 +1,11 @@
 module Orgmode
   module Elements
     class Document
-      attr_reader :footnotes
+      attr_reader :footnotes, :targets
 
       def initialize
         @footnotes = []
+        @targets = []
       end
 
       def store_footnote(line)
@@ -27,6 +28,17 @@ module Orgmode
           @footnotes.push(footnote)
         else
           footnote[:content] = content
+        end
+      end
+
+      def store_target(line)
+        return unless line.target?
+
+        line.to_s.scan(RegexpHelper.target) do |match|
+          content = match.first
+          target_index = @targets.length + 1
+          target = { index: target_index, content: content }
+          @targets.push(target)
         end
       end
     end

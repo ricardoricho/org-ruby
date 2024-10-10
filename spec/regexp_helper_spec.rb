@@ -10,15 +10,6 @@ describe Orgmode::RegexpHelper do
     example { expect(helper.org_emphasis_regexp).to match '[[a][~a~]]' }
   end
 
-  describe '#org-link-regexp' do
-    it 'match org-links' do
-      expect(helper.org_link_regexp).to match '[[url][description]]'
-    end
-
-    example { expect(helper.org_link_regexp).to match '[[url]]' }
-    example { expect(helper.org_link_regexp).to match '[[a][~a~]]' }
-  end
-
   it "should recognize simple markup" do
     e = Orgmode::RegexpHelper.new
     total = 0

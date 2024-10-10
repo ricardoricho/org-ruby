@@ -173,6 +173,8 @@ module Orgmode
 
         # Store footnotes
         document.store_footnote(line)
+        # Store targets
+        document.store_target(line)
 
         if (line.end_block? && [line.paragraph_type, :comment].include?(mode)) ||
            (line.property_drawer_end_block? && (mode == :property_drawer))

@@ -70,6 +70,10 @@ module Orgmode
         RegexpHelper.footnote_reference.match(@line)
     end
 
+    def target?
+      RegexpHelper.target.match(@line)
+    end
+
     def property_drawer_begin_block?
       match = RegexpHelper.drawer.match(@line)
       match && match[:name].downcase == 'properties'
