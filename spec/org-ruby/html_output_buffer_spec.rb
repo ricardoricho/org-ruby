@@ -1,5 +1,4 @@
 require 'spec_helper'
-require_relative '../../lib/org-ruby/html_output_buffer'
 
 module Orgmode
   RSpec.describe HtmlOutputBuffer do

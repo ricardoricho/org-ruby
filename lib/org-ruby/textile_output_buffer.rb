@@ -1,5 +1,3 @@
-require 'stringio'
-
 module Orgmode
   class TextileOutputBuffer < OutputBuffer
 

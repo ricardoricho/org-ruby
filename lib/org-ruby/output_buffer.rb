@@ -1,4 +1,5 @@
 require 'logger'
+require 'stringio'
 
 module Orgmode
   # The OutputBuffer is used to accumulate multiple lines of orgmode
