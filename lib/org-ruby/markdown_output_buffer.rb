@@ -35,14 +35,14 @@ module Orgmode
 
     # Handles inline formatting for markdown.
     def inline_formatting(input)
-      @re_help.rewrite_emphasis input do |marker, body|
+      @re_help.rewrite_emphasis(input) do |marker, body|
         m = MarkdownMap[marker]
         "#{m}#{body}#{m}"
       end
       @re_help.rewrite_subp input do |type, text|
-        if type == "_" then
+        if type == "_"
           "<sub>#{text}</sub>"
-        elsif type == "^" then
+        elsif type == "^"
           "<sup>#{text}</sup>"
         end
       end
@@ -69,41 +69,33 @@ module Orgmode
 
     # Flushes the current buffer
     def flush!
-      return false if @buffer.empty? and @output_type != :blank
-      @logger.debug "FLUSH ==========> #{@output_type}"
-      @buffer.gsub!(/\A\n*/, "")
+      return false if @buffer.string.empty? && @output_type != :blank
+
+      @buffer.string = @buffer.string.gsub!(/\A\n*/, "")
 
       case
       when mode_is_code?(current_mode)
-        @output << "```#{@block_lang}\n"
-        @output << @buffer << "\n"
-        @output << "```\n"
+        @output.write("```#{@block_lang}\n", @buffer.string, "\n", "```\n")
       when preserve_whitespace?
-        @output << @buffer << "\n"
-
+        @output.write(@buffer.string, "\n")
       when @output_type == :blank
-        @output << "\n"
-
+        @output.write("\n")
       else
         case current_mode
         when :paragraph
-          @output << "> " if @mode_stack[0] == :quote
-
+          @output.write "> " if @mode_stack[0] == :quote
         when :list_item
-          @output << " " * @mode_stack.count(:list_item) << "* "
-
+          @output.write(" " * @mode_stack.count(:list_item), "* ")
         when :horizontal_rule
-          @output << "---"
-
+          @output.write "---"
         end
-        @output << inline_formatting(@buffer) << "\n"
+        @output.write(inline_formatting(@buffer.string), "\n")
       end
-      @buffer = ""
+      @buffer = StringIO.new
     end
 
     def add_line_attributes headline
-      @output << "#" * headline.level
-      @output << " "
+      @output.write("#" * headline.level, " ")
     end
-  end                           # class MarkdownOutputBuffer
-end                             # module Orgmode
+  end
+end

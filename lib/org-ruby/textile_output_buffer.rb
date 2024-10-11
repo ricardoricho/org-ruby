@@ -9,10 +9,10 @@ module Orgmode
 
     def push_mode(mode, indent, properties={})
       super(mode, indent, properties)
-      @output << "bc. " if mode_is_code? mode
+      output.write("bc. ") if mode_is_code?(mode)
       if mode == :center || mode == :quote
         @add_paragraph = false
-        @output << "\n"
+        output.write "\n"
       end
     end
 
@@ -21,7 +21,7 @@ module Orgmode
       @list_indent_stack.pop
       if m == :center || m == :quote
         @add_paragraph = true
-        @output << "\n"
+        output.write "\n"
       end
       m
     end
@@ -38,12 +38,12 @@ module Orgmode
 
     # Handles inline formatting for textile.
     def inline_formatting(input)
-      @re_help.rewrite_emphasis input do |marker, body|
+      @re_help.rewrite_emphasis(input) do |marker, body|
         m = TextileMap[marker]
         "#{m}#{body}#{m}"
       end
 
-      @re_help.rewrite_subp input do |type, text|
+      @re_help.rewrite_subp(input) do |type, text|
         if type == "_"
           "~#{text}~"
         elsif type == "^"
@@ -101,50 +101,49 @@ module Orgmode
       return if document.footnotes.empty?
 
       document.footnotes.each do |footnote|
-        @output << "\nfn#{footnote[:index]}. #{footnote[:content].lstrip || 'DEFINITION NOT FOUND' }\n"
+        output.write "\nfn", footnote[:index], ". ",
+                     footnote[:content].lstrip || 'DEFINITION NOT FOUND', "\n"
       end
     end
 
     # Flushes the current buffer
     def flush!
-      return false if @buffer.empty? and @output_type != :blank
-      @logger.debug "FLUSH ==========> #{@output_type}"
-      @buffer.gsub!(/\A\n*/, "")
+      return false if @buffer.string.empty? && @output_type != :blank
+      @buffer.string = @buffer.string.gsub(/\A\n*/, "")
 
       case
       when preserve_whitespace?
-        @output << @buffer << "\n"
-
+        output.write @buffer.string, "\n"
       when @output_type == :blank
-        @output << "\n"
-
+        output.write "\n"
       else
         case current_mode
         when :paragraph
-          @output << "p. " if @add_paragraph
-          @output << "p=. " if @mode_stack[0] == :center
-          @output << "bq. " if @mode_stack[0] == :quote
+          output.write("p. ") if @add_paragraph
+          output.write("p=. ") if @mode_stack[0] == :center
+          output.write("bq. ") if @mode_stack[0] == :quote
 
         when :list_item
           if @mode_stack[-2] == :ordered_list
-            @output << "#" * @mode_stack.count(:list_item) << " "
+            output.write("#" * @mode_stack.count(:list_item), " ")
           else # corresponds to unordered list
-            @output << "*" * @mode_stack.count(:list_item) << " "
+            output.write("*" * @mode_stack.count(:list_item), " ")
           end
 
         when :definition_term
           if @support_definition_list
-            @output << "-" * @mode_stack.count(:definition_term) << " "
-            @buffer.sub!("::", ":=")
+            output.write("-" * @mode_stack.count(:definition_term), " ")
+            @buffer.string.sub!("::", ":=")
           end
         end
-        @output << inline_formatting(@buffer) << "\n"
+        inlineformat = inline_formatting(@buffer.string)
+        output.write(inlineformat, "\n")
       end
-      @buffer = ""
+      @buffer = StringIO.new
     end
 
     def add_line_attributes headline
-      @output << "h#{headline.level}. "
+      output.write "h#{headline.level}. "
     end
   end
 end

@@ -314,7 +314,7 @@ module Orgmode
 
     # Saves the loaded orgmode file as a textile file.
     def to_textile
-      output = ''
+      output = StringIO.new
       output_buffer = TextileOutputBuffer.new(output, document)
 
       translate(@header_lines, output_buffer)
@@ -322,7 +322,7 @@ module Orgmode
         translate(headline.body_lines, output_buffer)
       end
       output_buffer.output_footnotes!
-      output
+      output.string
     end
 
     # Exports the Org mode content into Markdown format
@@ -331,12 +331,12 @@ module Orgmode
       export_options = {
         markup_file: @parser_options[:markup_file]
       }
-      output = ''
+      output = StringIO.new
       output_buffer = MarkdownOutputBuffer.new(output, export_options)
 
       translate(@header_lines, output_buffer)
       translate_headlines(@headlines, output_buffer)
-      output
+      output.string
     end
 
     # Converts the loaded org-mode file to HTML.
@@ -356,7 +356,7 @@ module Orgmode
         generate_heading_id: @parser_options[:generate_heading_id]
       }
       export_options[:skip_tables] = true unless export_tables?
-      output = ''
+      output = StringIO.new
       output_buffer = HtmlOutputBuffer.new(output, document, export_options)
       if title?
         # If we're given a new title, then just create a new line
@@ -371,9 +371,9 @@ module Orgmode
       translate_headlines(@headlines, output_buffer)
       output << "\n"
 
-      return output if @parser_options[:skip_rubypants_pass]
+      return output.string if @parser_options[:skip_rubypants_pass]
 
-      rp = RubyPants.new(output)
+      rp = RubyPants.new(output.string)
       rp.to_html
     end
 

@@ -64,9 +64,9 @@ module Orgmode
       if restart_numbering?(mode, properties)
         list_item_tag = HtmlBlockTag[:list_item]
         start = properties[list_item_tag]
-        @output << "<#{html_tag} start=#{start}#{css_class}>"
+        output.write "<#{html_tag} start=#{start}#{css_class}>"
       else
-        @output << "<#{html_tag}#{css_class}>"
+        output.write "<#{html_tag}#{css_class}>"
       end
       # Entering a new mode obliterates the title decoration
       @options[:decorate_title] = nil
@@ -90,7 +90,7 @@ module Orgmode
 
     def push_indentation(condition)
       indent = "  " * indentation_level
-      condition && @output.concat("\n", indent)
+      condition && output.write("\n", indent)
       @new_paragraph = true
     end
 
@@ -111,7 +111,7 @@ module Orgmode
       return list_indent_stack.pop if skip_css?(mode)
 
       push_indentation(@new_paragraph)
-      @output.concat close_tag(mode)
+      output.write close_tag(mode)
       list_indent_stack.pop
     end
 
@@ -120,8 +120,8 @@ module Orgmode
     end
 
     def flush!
-      return false if @buffer.empty?
-      return @buffer = "" if (mode_is_table?(current_mode) && skip_tables?)
+      return false if @buffer.string.empty?
+      return @buffer = StringIO.new if (mode_is_table?(current_mode) && skip_tables?)
 
       if preserve_whitespace?
         strip_code_block! if mode_is_code? current_mode
@@ -132,52 +132,52 @@ module Orgmode
           if (current_mode == :html || current_mode == :raw_text)
             remove_new_lines_in_buffer(@new_paragraph == :start)
           else
-            @buffer = escapeHTML @buffer
+            @buffer.string = escapeHTML(@buffer.string)
           end
         end
 
         # Whitespace is significant in :code mode. Always output the
         # buffer and do not do any additional translation.
-        @output << @buffer
+        output.write(@buffer.string)
       else
-        @buffer.lstrip!
+        @buffer.string.lstrip!
         @new_paragraph = nil
         if (current_mode == :definition_term)
-          d = @buffer.split(/\A(.*[ \t]+|)::(|[ \t]+.*?)$/, 4)
+          d = @buffer.string.split(/\A(.*[ \t]+|)::(|[ \t]+.*?)$/, 4)
 
           definition = d[1].strip
           if definition.empty?
-            @output << "???"
+            output.write "???"
           else
-            @output << inline_formatting(definition)
+            output.write inline_formatting(definition)
           end
           indent = list_indent_stack.last
           pop_mode
 
           @new_paragraph = :start
           push_mode(:definition_descr, indent)
-          @output.concat inline_formatting(d[2].strip + d[3])
+          output.write inline_formatting(d[2].strip + d[3])
           @new_paragraph = nil
         elsif (current_mode == :horizontal_rule)
 
           add_paragraph unless @new_paragraph == :start
           @new_paragraph = true
-          @output << "<hr />"
+          output.write "<hr />"
 
         else
-          @output << inline_formatting(@buffer)
+          output.write(inline_formatting(@buffer.string))
         end
       end
-      @buffer = ""
+      @buffer = StringIO.new
     end
 
     # Flush! helping methods
     def highlight_html_buffer
       if skip_syntax_hightlight?
-        @buffer = escapeHTML @buffer
+        @buffer.string = escapeHTML(@buffer.string)
       else
         lang = normalize_lang @block_lang
-        @buffer = highlight(@buffer, lang)
+        @buffer.string = highlight(@buffer.string, lang)
       end
     end
 
@@ -188,7 +188,7 @@ module Orgmode
     def remove_new_lines_in_buffer(condition)
       return unless %i[html raw_text].include?(current_mode)
 
-      condition && @buffer.gsub!(/\A\n/, "")
+      condition && @buffer.string.gsub!(/\A\n/, "")
       @new_paragraph = true
     end
     #flush helpers ends here.
@@ -201,19 +201,19 @@ module Orgmode
       if @options[:export_heading_number]
         headline_level = headline.headline_level
         heading_number = get_next_headline_number(headline_level)
-        @output << "<span class=\"heading-number heading-number-#{level}\">#{heading_number}</span> "
+        output.write "<span class=\"heading-number heading-number-#{level}\">#{heading_number}</span> "
       end
       if @options[:export_todo] && headline.keyword
         keyword = headline.keyword
-        @output << "<span class=\"todo-keyword #{keyword}\">#{keyword}</span> "
+        output.write "<span class=\"todo-keyword #{keyword}\">#{keyword}</span> "
       end
     end
 
     def add_headline_id(line)
       return unless @options[:generate_heading_id]
       # Nice hack to "open" the line tag and include the id
-      @output.delete_suffix!('>')
-      @output << " id=\"#{line.slugify}\">"
+      output.pos = output.pos - 1
+      output.write ' id="', line.slugify, '">'
     end
 
     def html_buffer_code_block_indent(line)
@@ -239,17 +239,18 @@ module Orgmode
     def output_footnotes!
       return if !options[:export_footnotes] || document.footnotes.empty?
 
-      @output.concat footnotes_header
+      output.write footnotes_header
       document.footnotes.each do |footnote|
-        @buffer = footnote[:content].empty? && footnote[:label] || footnote[:content]
+        @buffer.string = footnote[:content].empty? && footnote[:label] || footnote[:content]
         a_href = footnote[:index]
-        @output << "<div class=\"footdef\"><sup><a id=\"fn.#{a_href}\" class=\"footnum\" href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>" \
-                << "<div class=\"footpara\" role=\"doc-footnote\"><p class=\"footpara\">" \
-                << inline_formatting(@buffer) \
-                << "</p></div></div>\n"
+        output.write "<div class=\"footdef\"><sup><a id=\"fn.#{a_href}\" class=\"footnum\" ",
+                      "href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>",
+                      "<div class=\"footpara\" role=\"doc-footnote\"><p class=\"footpara\">",
+                      inline_formatting(@buffer.string),
+                      "</p></div></div>\n"
       end
 
-      @output.concat "</div>\n</div>"
+      output.write "</div>\n</div>"
     end
 
     def footnotes_header
@@ -295,7 +296,7 @@ module Orgmode
     end
 
     # Escapes any HTML content in string
-    def escape_string! str
+    def escape_string!(str)
       str.gsub!(/&/, "&amp;")
       # Escapes the left and right angular brackets but construction
       # @@html:<text>@@ which is formatted to <text>
@@ -318,7 +319,7 @@ module Orgmode
 
     def add_paragraph
       indent = "  " * (list_indent_stack.length - 1)
-      @output.concat "\n#{indent}"
+      output.write("\n", indent)
     end
 
     Tags = {
@@ -383,7 +384,7 @@ module Orgmode
         str.sub!(/\\\\$/, quote_tags("<br />"))
       end
 
-      escape_string! str
+      escape_string!(str)
       Orgmode.special_symbols_to_html str
       str = @re_help.restore_code_snippets str
     end
@@ -471,12 +472,12 @@ module Orgmode
     def strip_code_block!
       if @code_block_indent and @code_block_indent > 0
         strip_regexp = Regexp.new("^" + " " * @code_block_indent)
-        @buffer.gsub!(strip_regexp, "")
+        @buffer.string.gsub!(strip_regexp, "")
       end
       @code_block_indent = nil
 
       # Strip proctective commas generated by Org mode (C-c ')
-      @buffer.gsub!(/^(\s*)(,)(\s*)([*]|#\+)/) do |match|
+      @buffer.string.gsub!(/^(\s*)(,)(\s*)([*]|#\+)/) do |match|
         "#{$1}#{$3}#{$4}"
       end
     end

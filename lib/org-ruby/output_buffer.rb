@@ -19,7 +19,7 @@ module Orgmode
       # This is the accumulation buffer. It's a holding pen so
       # consecutive lines of the right type can get stuck together
       # without intervening newlines.
-      @buffer = ""
+      @buffer = StringIO.new
 
       # This stack is used to do proper outline numbering of
       # headlines.
@@ -59,8 +59,7 @@ module Orgmode
         flush!
         maintain_mode_stack(line)
       end
-
-      @buffer.concat(line_get_content(line))
+      @buffer.write line_get_content(line)
       html_buffer_code_block_indent(line)
       @output_type = line.assigned_paragraph_type || line.paragraph_type
     end
