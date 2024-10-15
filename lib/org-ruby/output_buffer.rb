@@ -1,4 +1,3 @@
-require 'logger'
 require 'stringio'
 
 module Orgmode
@@ -34,8 +33,6 @@ module Orgmode
 
       # regexp module
       @re_help = RegexpHelper.new
-      @logger = Logger.new(STDERR)
-      @logger.level = Logger::INFO
     end
 
     def current_mode

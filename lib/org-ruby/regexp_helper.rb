@@ -1,4 +1,3 @@
-require 'logger' # Try to remove logger
 require 'org-ruby/line_regexp'
 require 'org-ruby/headline_regexp'
 
@@ -47,8 +46,6 @@ module Orgmode
     def initialize
       # Set up the emphasis regular expression.
       @code_snippet_stack = []
-      @logger = Logger.new(STDERR)
-      @logger.level = Logger::WARN
     end
 
     # Finds all emphasis matches in a string.
