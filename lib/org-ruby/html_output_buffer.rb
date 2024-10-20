@@ -301,12 +301,13 @@ module Orgmode
       # Escapes the left and right angular brackets but construction
       # @@html:<text>@@ which is formatted to <text>
       str.gsub!(/<([^<>\n]*)/) do |match|
-        ($`[-7..-1] == "@@html:" and $'[0..2] == ">@@") ? $& : "&lt;#{$1}"
+        ($`[-7..-1] == "@@html:" && $'[0..2] == ">@@") ? $& : "&lt;#{$1}"
       end
       str.gsub!(/([^<>\n]*)>/) do |match|
         $`[-8..-1] == "@@html:<" ? $& : "#{$1}&gt;"
       end
       str.gsub!(/@@html:(<[^<>\n]*>)@@/, "\\1")
+      Orgmode.special_symbols_to_html(str)
     end
 
     def quote_tags(str)
@@ -334,6 +335,36 @@ module Orgmode
 
     # Applies inline formatting rules to a string.
     def inline_formatting(str)
+      rewrite_emphasis(str)
+      rewrite_targets(str)
+
+      rewrite_sub_superscripts(str) if @options[:use_sub_superscripts]
+      rewrite_links(str)
+      rewrite_row(str) if @output_type == :table_row
+      rewrite_table_header(str) if @output_type == :table_header
+      rewrite_footnote(str) if @options[:export_footnotes]
+
+      # Two backslashes \\ at the end of the line make a line break without breaking paragraph.
+      if @output_type != :table_row && @output_type != :table_header
+        str.sub!(/\\\\$/, quote_tags("<br />"))
+      end
+      str = escape_string!(str)
+      str = @re_help.restore_code_snippets(str)
+    end
+
+    def rewrite_sub_superscripts(str)
+      @re_help.rewrite_subp(str) do |type, text|
+        if type == "_"
+          quote_tags("<sub>") + text + quote_tags("</sub>")
+        elsif type == "^"
+          quote_tags("<sup>") + text + quote_tags("</sup>")
+        else
+          raise "type: #{type} text: #{text}"
+        end
+      end
+    end
+
+    def rewrite_emphasis(str)
       @re_help.rewrite_emphasis(str) do |marker, text|
         if marker == "=" || marker == "~"
           escaped_text = escapeHTML(text)
@@ -343,53 +374,22 @@ module Orgmode
             quote_tags("</#{Tags[marker][:close]}>")
         end
       end
-      rewrite_targets(str)
+    end
 
-      if @options[:use_sub_superscripts]
-        @re_help.rewrite_subp str do |type, text|
-          if type == "_" then
-            quote_tags("<sub>") + text + quote_tags("</sub>")
-          elsif type == "^" then
-            quote_tags("<sup>") + text + quote_tags("</sup>")
-          end
-        end
-      end
+    def rewrite_table_header(str)
+      str.gsub!(/^\|\s*/, quote_tags("<th>"))
+      str.gsub!(/\s*\|$/, quote_tags("</th>"))
+      str.gsub!(/\s*\|\s*/, quote_tags("</th><th>"))
+    end
 
-      rewrite_links(str)
-
-      if @output_type == :table_row
-        str.gsub!(/^\|\s*/, quote_tags("<td>"))
-        str.gsub!(/\s*\|$/, quote_tags("</td>"))
-        str.gsub!(/\s*\|\s*/, quote_tags("</td><td>"))
-      end
-
-      if @output_type == :table_header
-        str.gsub!(/^\|\s*/, quote_tags("<th>"))
-        str.gsub!(/\s*\|$/, quote_tags("</th>"))
-        str.gsub!(/\s*\|\s*/, quote_tags("</th><th>"))
-      end
-
-      if @options[:export_footnotes]
-        @re_help.capture_footnote_definition(str) do |label, content|
-          # Capture definition and replace it with nil
-          nil
-        end
-
-        # Reference footnote
-        rewrite_footnote(str)
-      end
-
-      # Two backslashes \\ at the end of the line make a line break without breaking paragraph.
-      if @output_type != :table_row and @output_type != :table_header then
-        str.sub!(/\\\\$/, quote_tags("<br />"))
-      end
-
-      escape_string!(str)
-      Orgmode.special_symbols_to_html str
-      str = @re_help.restore_code_snippets str
+    def rewrite_row(str)
+      str.gsub!(/^\|\s*/, quote_tags("<td>"))
+      str.gsub!(/\s*\|$/, quote_tags("</td>"))
+      str.gsub!(/\s*\|\s*/, quote_tags("</td><td>"))
     end
 
     def rewrite_footnote(str)
+      @re_help.capture_footnote_definition(str) { nil }
       @re_help.rewrite_footnote(str) do |label, content|
         footnote = document.footnotes.find do |footnote|
           footnote[:label] == label || footnote[:content] == content

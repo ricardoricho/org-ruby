@@ -348,15 +348,17 @@ module Orgmode
   }
   @org_entities_regexp = /\\(there4|sup[123]|frac[13][24]|[a-zA-Z]+)($|\{\}|[^a-zA-Z])/
 
-  def Orgmode.special_symbols_to_html str
-    str.gsub! @org_entities_regexp do |match|
+  def Orgmode.special_symbols_to_html(str)
+    str.gsub(@org_entities_regexp) do |match|
       if HtmlEntities[$1]
-        if $2 == "{}" then "#{HtmlEntities[$1]}"
-        else "#{HtmlEntities[$1]}#{$2}"
+        if $2 == "{}"
+          HtmlEntities[$1]
+        else
+          "#{HtmlEntities[$1]}#{$2}"
         end
       else
         $&
       end
     end
   end
-end # module Orgmode
+end

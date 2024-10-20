@@ -155,9 +155,7 @@ module Orgmode
     end
 
     def restore_code_snippets(str)
-      str = str % @code_snippet_stack
-      @code_snippet_stack = []
-      str
+      sprintf(str, *@code_snippet_stack).tap { @code_snippet_stack = [] }
     end
 
     def org_emphasis_regexp
