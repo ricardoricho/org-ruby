@@ -90,6 +90,10 @@ module Orgmode
       /^\s*#\+RESULTS:\s*(.+)?$/i
     end
 
+    def subp
+      /(?<base>\S)(?<type>[_^])((\{(?<text>[^{}]*)\}))/
+    end
+
     # for an org-mode table, the first non-whitespace character is a
     # | (pipe).
     def table_row

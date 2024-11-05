@@ -31,8 +31,6 @@ module Orgmode
       @options = opts
       @new_paragraph = :start
       @unclosed_tags = []
-
-      # move from output_buffer
       @code_block_indent = nil
 
       do_custom_markup
@@ -244,10 +242,10 @@ module Orgmode
         @buffer.string = footnote[:content].empty? && footnote[:label] || footnote[:content]
         a_href = footnote[:index]
         output.write "<div class=\"footdef\"><sup><a id=\"fn.#{a_href}\" class=\"footnum\" ",
-                      "href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>",
-                      "<div class=\"footpara\" role=\"doc-footnote\"><p class=\"footpara\">",
-                      inline_formatting(@buffer.string),
-                      "</p></div></div>\n"
+                     "href=\"#fnr.#{a_href}\" role=\"doc-backlink\">#{a_href}</a></sup>",
+                     "<div class=\"footpara\" role=\"doc-footnote\"><p class=\"footpara\">",
+                     inline_formatting(@buffer.string),
+                     "</p></div></div>\n"
       end
 
       output.write "</div>\n</div>"
@@ -261,6 +259,17 @@ module Orgmode
     # Test if we're in an output mode in which whitespace is significant.
     def preserve_whitespace?
       super || current_mode == :html
+    end
+
+    def rewrite_sub_superscripts(str)
+      @re_help.rewrite_subp(str) do |base, type, text|
+        case type
+        when '_'
+          base + quote_tags("<sub>") + text + quote_tags("</sub>")
+        when '^'
+          base + quote_tags("<sup>") + text + quote_tags("</sup>")
+        end
+      end
     end
 
     private
@@ -315,7 +324,7 @@ module Orgmode
     end
 
     def buffer_indentation
-       "  " * list_indent_stack.length
+      "  " * list_indent_stack.length
     end
 
     def add_paragraph
@@ -327,7 +336,7 @@ module Orgmode
       "*" => { :open => "b", :close => "b" },
       "/" => { :open => "i", :close => "i" },
       "_" => { :open => "span style=\"text-decoration:underline;\"",
-        :close => "span" },
+               :close => "span" },
       "=" => { :open => "code", :close => "code" },
       "~" => { :open => "code", :close => "code" },
       "+" => { :open => "del", :close => "del" }
@@ -350,18 +359,6 @@ module Orgmode
       end
       str = escape_string!(str)
       str = @re_help.restore_code_snippets(str)
-    end
-
-    def rewrite_sub_superscripts(str)
-      @re_help.rewrite_subp(str) do |type, text|
-        if type == "_"
-          quote_tags("<sub>") + text + quote_tags("</sub>")
-        elsif type == "^"
-          quote_tags("<sup>") + text + quote_tags("</sup>")
-        else
-          raise "type: #{type} text: #{text}"
-        end
-      end
     end
 
     def rewrite_emphasis(str)

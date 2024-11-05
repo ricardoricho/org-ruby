@@ -38,11 +38,12 @@ module Orgmode
         m = MarkdownMap[marker]
         "#{m}#{body}#{m}"
       end
-      @re_help.rewrite_subp input do |type, text|
-        if type == "_"
-          "<sub>#{text}</sub>"
-        elsif type == "^"
-          "<sup>#{text}</sup>"
+      @re_help.rewrite_subp(input) do |base, type, text|
+        case type
+        when '_'
+          "#{base}<sub>#{text}</sub>"
+        when '^'
+          "#{base}<sup>#{text}</sup>"
         end
       end
       @re_help.rewrite_links input do |link, defi|

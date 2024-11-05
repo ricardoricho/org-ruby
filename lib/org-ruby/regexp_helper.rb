@@ -98,8 +98,9 @@ module Orgmode
 
     # rewrite subscript and superscript (_{foo} and ^{bar})
     def rewrite_subp(str)
-      str.gsub!(org_subp_regexp) do |_match|
-        yield Regexp.last_match(1), Regexp.last_match(2)
+      str.gsub!(RegexpHelper.subp) do |_match|
+        match = Regexp.last_match
+        yield match[:base], match[:type], match[:text]
       end
     end
 
@@ -191,10 +192,6 @@ module Orgmode
 
     def body_regexp
       '.*?(?:\\n.*?){0,1}'
-    end
-
-    def org_subp_regexp
-      /([_^])\{(.*?)\}/
     end
 
     def org_footnote_regexp

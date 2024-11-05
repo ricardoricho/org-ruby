@@ -214,6 +214,24 @@ module Orgmode
       it { expect(regexp.results_start).to match " #+RESULTS: spec " }
     end
 
+    describe '.subp' do
+      it { expect(regexp.subp).to match "x^{y^{z}}" }
+      it 'captures :base, :type _ and :text' do
+        match = regexp.subp.match("y_{i^th, i is odd}")
+        expect(match[:base]).to eq 'y'
+        expect(match[:type]).to eq '_'
+        expect(match[:text]).to eq 'i^th, i is odd'
+      end
+      it 'captures :type ^ and :text' do
+        match = regexp.subp.match("y(i^{th}, i is odd)")
+        expect(match[:base]).to eq 'i'
+        expect(match[:type]).to eq '^'
+        expect(match[:text]).to eq 'th'
+      end
+      it { expect(regexp.subp).not_to match "base^{script" }
+      it { expect(regexp.subp).not_to match "base^({script}" }
+    end
+
     describe '.table_row' do
       it { expect(regexp.table_row).to match "\t |" }
       it { expect(regexp.table_row).to match "\t | table" }

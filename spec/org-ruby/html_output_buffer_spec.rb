@@ -123,5 +123,18 @@ module Orgmode
         end
       end
     end
+
+    describe '.rewrite_sub_superscripts' do
+      let(:text) { 'This is a sub_{script} text.'}
+      it 'replace subscripts' do
+        expected = "This is a sub@@html:<sub>@@script@@html:</sub>@@ text."
+        expect(buffer.rewrite_sub_superscripts(text)).to eq expected
+      end
+      it 'replace superscripts' do
+        text = 'This is a sup^{script} text.'
+        expected = "This is a sup@@html:<sup>@@script@@html:</sup>@@ text."
+        expect(buffer.rewrite_sub_superscripts(text)).to eq expected
+      end
+    end
   end
 end
