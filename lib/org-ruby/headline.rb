@@ -38,6 +38,17 @@ module Orgmode
       set_properties!(parser, offset)
     end
 
+    def body
+      case export_state
+      when :exclude
+        []
+      when :headline_only
+        body_lines.take(1)
+      when :all
+        body_lines
+      end
+    end
+
     # Override Line.output_text
     def output_text
       @headline_text

@@ -5,9 +5,14 @@ module Orgmode
       attr_accessor :title
 
       def initialize
+        @headlines = []
         @footnotes = []
         @targets = []
         @title = ""
+      end
+
+      def store_headline(line)
+        headlines.push(line)
       end
 
       def store_footnote(line)

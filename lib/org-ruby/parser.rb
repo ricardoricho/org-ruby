@@ -11,9 +11,6 @@ module Orgmode
     # All of the lines of the orgmode file
     attr_reader :lines
 
-    # All of the headlines in the org file
-    attr_reader :headlines
-
     # These are any lines before the first headline
     attr_reader :header_lines
 
@@ -102,7 +99,6 @@ module Orgmode
       @current_headline = nil
       @document = Orgmode::Elements::Document.new
       @in_buffer_settings = {}
-      @headlines = []
       @header_lines = []
       @link_abbrevs = {}
       @options = {}
@@ -134,6 +130,10 @@ module Orgmode
       @parser_options[:offset] ||= 0
 
       parse_lines @lines
+    end
+
+    def headlines
+      document.headlines
     end
 
     # Check include file availability and permissions
@@ -205,7 +205,10 @@ module Orgmode
         end
 
         if mode == :normal
-          @headlines << @current_headline = line if line.headline?
+          if line.headline?
+            document.store_headline(line)
+            @current_headline = line
+          end
           # If there is a setting on this line, remember it.
           line.in_buffer_setting? do |key, value|
             store_in_buffer_setting key.upcase, value
@@ -318,7 +321,7 @@ module Orgmode
       output_buffer = TextileOutputBuffer.new(output, document)
 
       translate(@header_lines, output_buffer)
-      @headlines.each do |headline|
+      document.headlines.each do |headline|
         translate(headline.body_lines, output_buffer)
       end
       output_buffer.output_footnotes!
@@ -335,7 +338,10 @@ module Orgmode
       output_buffer = MarkdownOutputBuffer.new(output, export_options)
 
       translate(@header_lines, output_buffer)
-      translate_headlines(@headlines, output_buffer)
+      document.headlines.each do |headline|
+        translate(headline.body, output_buffer)
+      end
+      output_buffer.output_footnotes!
       output.string
     end
 
@@ -398,18 +404,6 @@ module Orgmode
 
     private
 
-    def translate_headlines(headlines, output_buffer)
-      headlines.each do |headline|
-        case headline.export_state
-        when :headline_only
-          translate(headline.body_lines[0, 1], output_buffer)
-        when :all
-          translate(headline.body_lines, output_buffer)
-        end
-      end
-      output_buffer.output_footnotes!
-    end
-
     # Converts an array of lines to the appropriate format.
     # Writes the output to +output_buffer+.
     def translate(lines, output_buffer)
@@ -431,7 +425,7 @@ module Orgmode
       ancestor_stack = []
 
       # First pass: See if any headlines are explicitly selected
-      @headlines.each do |headline|
+      document.headlines.each do |headline|
         ancestor_stack.pop while !ancestor_stack.empty? &&
                                  (headline.level <= ancestor_stack.last.level)
         if inherit_export_level && (headline.level > inherit_export_level)
@@ -451,10 +445,10 @@ module Orgmode
       end
 
       # If nothing was selected, then EVERYTHING is selected.
-      @headlines.each { |h| h.export_state = :all } unless marked_any
+      document.headlines.each { |h| h.export_state = :all } unless marked_any
 
       # Second pass. Look for things that should be excluded, and get rid of them.
-      @headlines.each do |headline|
+      document.headlines.each do |headline|
         if inherit_export_level && (headline.level > inherit_export_level)
           headline.export_state = :exclude
         else
