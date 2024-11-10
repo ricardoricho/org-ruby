@@ -287,16 +287,12 @@ module Orgmode
     end
 
     def link_abbrev?
-      @line =~ RegexpHelper.link_abbrev
-    end
-
-    def link_abbrev_data
       match = RegexpHelper.link_abbrev.match(@line)
       match && [match[:text], match[:url]]
     end
 
     def include_file?
-      @line =~ RegexpHelper.include_file
+      RegexpHelper.include_file.match(@line)
     end
 
     def include_file_path

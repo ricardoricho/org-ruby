@@ -2,15 +2,16 @@ module Orgmode
   module Elements
     class Document
       attr_reader :buffer_settings, :headlines, :footnotes, :targets, :options,
-                  :custom_keywords
+                  :custom_keywords, :link_abbreviations
       attr_writer :title
 
       def initialize
         @buffer_settings = {}
-        @options = {}
+        @custom_keywords = []
         @footnotes = []
         @headlines = []
-        @custom_keywords = []
+        @link_abbreviations = {}
+        @options = {}
         @targets = []
         @title = ""
       end
@@ -34,6 +35,12 @@ module Orgmode
             buffer_settings.store(key, value)
           end
         end
+      end
+
+      def store_link_abbreviation(line)
+        return unless link = line.link_abbrev?
+
+        link_abbreviations.store(link.first, link.last)
       end
 
       def store_footnote(line)

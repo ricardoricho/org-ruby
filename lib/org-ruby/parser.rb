@@ -80,39 +80,12 @@ module Orgmode
 
     # I can construct a parser object either with an array of lines
     # or with a single string that I will split along \n boundaries.
-    def initialize(lines, parser_options = {})
+    def initialize(lines, options = {})
       @lines = initialize_lines(lines)
       @current_headline = nil
       @document = Orgmode::Elements::Document.new
       @header_lines = []
-      @link_abbrevs = {}
-      @parser_options = parser_options
-
-      #
-      # Include file feature disabled by default since
-      # it would be dangerous in some environments
-      #
-      # http://orgmode.org/manual/Include-files.html
-      #
-      # It will be activated by one of the following:
-      #
-      # - setting an ORG_RUBY_ENABLE_INCLUDE_FILES env variable to 'true'
-      # - setting an ORG_RUBY_INCLUDE_ROOT env variable with the root path
-      # - explicitly enabling it by passing it as an option:
-      #   e.g. Orgmode::Parser.new(org_text, { :allow_include_files => true })
-      #
-      # IMPORTANT: To avoid the feature altogether, it can be _explicitly disabled_ as follows:
-      #   e.g. Orgmode::Parser.new(org_text, { :allow_include_files => false })
-      #
-      if @parser_options[:allow_include_files].nil?
-        if (ENV['ORG_RUBY_ENABLE_INCLUDE_FILES'] == 'true') \
-          || !ENV['ORG_RUBY_INCLUDE_ROOT'].nil?
-          @parser_options[:allow_include_files] = true
-        end
-      end
-
-      @parser_options[:offset] ||= 0
-
+      parse_options options
       parse_lines @lines
     end
 
@@ -157,16 +130,12 @@ module Orgmode
 
         if @parser_options[:allow_include_files] && line.include_file? &&
            !line.include_file_path.nil?
-            next unless check_include_file line.include_file_path
+            next unless check_include_file(line.include_file_path)
             include_file(line)
         end
 
         # Store link abbreviations
-        if line.link_abbrev?
-          link_abbrev_data = line.link_abbrev_data
-          @link_abbrevs[link_abbrev_data[0]] = link_abbrev_data[1]
-        end
-
+        document.store_link_abbreviation(line)
         # Store footnotes
         document.store_footnote(line)
         # Store targets
@@ -348,7 +317,7 @@ module Orgmode
         export_todo: export_todo?,
         footnotes_title: @parser_options[:footnotes_title],
         generate_heading_id: @parser_options[:generate_heading_id],
-        link_abbrevs: @link_abbrevs,
+        link_abbrevs: document.link_abbreviations,
         ltr: left_to_right?,
         markup_file: @parser_options[:markup_file],
         skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
@@ -387,6 +356,17 @@ module Orgmode
     attr_reader :document
 
     private
+
+    def parse_options(options)
+      @parser_options = options
+      if @parser_options[:allow_include_files].nil?
+        if (ENV['ORG_RUBY_ENABLE_INCLUDE_FILES'] == 'true') ||
+           !ENV['ORG_RUBY_INCLUDE_ROOT'].nil?
+          @parser_options[:allow_include_files] = true
+        end
+      end
+      @parser_options[:offset] ||= 0
+    end
 
     # Converts an array of lines to the appropriate format.
     # Writes the output to +output_buffer+.
