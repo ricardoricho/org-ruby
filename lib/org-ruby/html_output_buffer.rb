@@ -218,19 +218,19 @@ module Orgmode
       level = headline.level
       add_headline_id(headline)
 
-      if @options[:export_heading_number]
+      if options[:export_heading_number]
         headline_level = headline.headline_level
         heading_number = get_next_headline_number(headline_level)
         output.write "<span class=\"heading-number heading-number-#{level}\">#{heading_number}</span> "
       end
-      if @options[:export_todo] && headline.keyword
+      if options[:export_todo] && headline.keyword
         keyword = headline.keyword
         output.write "<span class=\"todo-keyword #{keyword}\">#{keyword}</span> "
       end
     end
 
     def add_headline_id(line)
-      return unless @options[:generate_heading_id]
+      return unless options[:generate_heading_id]
       # Nice hack to "open" the line tag and include the id
       output.pos = output.pos - 1
       output.write ' id="', line.slugify, '">'
@@ -306,9 +306,9 @@ module Orgmode
         " class=\"example\""
       when mode == :center
         " style=\"text-align: center\""
-      when @options[:decorate_title]
+      when options[:decorate_title]
         " class=\"title\""
-      when @options[:ltr]
+      when options[:ltr]
         " dir=\"auto\""
       end
     end
@@ -369,11 +369,11 @@ module Orgmode
       rewrite_emphasis(str)
       rewrite_targets(str)
 
-      rewrite_sub_superscripts(str) if @options[:use_sub_superscripts]
+      rewrite_sub_superscripts(str) if options[:use_sub_superscripts]
       rewrite_links(str)
       rewrite_row(str) if @output_type == :table_row
       rewrite_table_header(str) if @output_type == :table_header
-      rewrite_footnote(str) if @options[:export_footnotes]
+      rewrite_footnote(str) if options[:export_footnotes]
 
       # Two backslashes \\ at the end of the line make a line break without breaking paragraph.
       if @output_type != :table_row && @output_type != :table_header
@@ -440,7 +440,7 @@ module Orgmode
         end
 
         if defi
-          link = @options[:link_abbrevs][link] if @options[:link_abbrevs].has_key?(link)
+          link = options[:link_abbrevs][link] if options[:link_abbrevs].has_key?(link)
           target = document.targets.find do |target|
             target[:content] == defi
           end

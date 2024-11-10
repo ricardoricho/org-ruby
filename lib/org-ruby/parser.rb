@@ -14,74 +14,61 @@ module Orgmode
     # These are any lines before the first headline
     attr_reader :header_lines
 
-    # This contains any in-buffer settings from the org-mode file.
-    # See http://orgmode.org/manual/In_002dbuffer-settings.html#In_002dbuffer-settings
-    attr_reader :in_buffer_settings
-
-    # This contains in-buffer options; a special case of in-buffer settings.
-    attr_reader :options
-
-    # Array of custom keywords.
-    attr_reader :custom_keywords
-
     # Regexp that recognizes words in custom_keywords.
     def custom_keyword_regexp
-      return nil if @custom_keywords.empty?
+      return nil if document.custom_keywords.empty?
 
-      Regexp.new("^(#{@custom_keywords.join('|')})\$")
+      keywords = document.custom_keywords.join('|')
+      Regexp.new("^(#{keywords})\$")
     end
 
     # A set of tags that, if present on any headlines in the org-file, means
     # only those headings will get exported.
     def export_select_tags
-      return Array.new unless @in_buffer_settings["EXPORT_SELECT_TAGS"]
-
-      @in_buffer_settings["EXPORT_SELECT_TAGS"].split
+      buffer_settings.fetch("EXPORT_SELECT_TAGS", "").split
     end
 
     # A set of tags that, if present on any headlines in the org-file, means
     # that subtree will not get exported.
     def export_exclude_tags
-      return Array.new unless @in_buffer_settings["EXPORT_EXCLUDE_TAGS"]
-
-      @in_buffer_settings["EXPORT_EXCLUDE_TAGS"].split
+      buffer_settings.fetch("EXPORT_EXCLUDE_TAGS", "").split
     end
 
     # Returns true if we are to export todo keywords on headings.
     def export_todo?
-      "t" == @options["todo"]
+      "t" == options["todo"]
     end
 
     # Returns true if we are to export footnotes
     def export_footnotes?
-      "nil" != @options["f"]
+      "nil" != options["f"]
     end
 
     # Returns true if we are to export heading numbers.
     def export_heading_number?
-      "t" == @options["num"]
+      "t" == options["num"]
     end
 
     # Should we skip exporting text before the first heading?
     def skip_header_lines?
-      "t" == @options["skip"]
+      "t" == options["skip"]
     end
 
     # Should we export tables? Defaults to true, must be overridden
     # with an explicit "nil"
     def export_tables?
-      "nil" != @options["|"]
+      "nil" != options["|"]
     end
 
     # Should we export sub/superscripts? (_{foo}/^{foo})
     # only {} mode is currently supported.
     def use_sub_superscripts?
-      @options["^"] != "nil"
+      "nil" != options["^"]
     end
 
     # Support for left to right when buffer or parser option.
     def left_to_right?
-      @options["ltr"] == 't' || @parser_options[:ltr]
+      options["ltr"] == 't' || @parser_options[:ltr]
     end
 
     def initialize_lines(lines)
@@ -95,13 +82,10 @@ module Orgmode
     # or with a single string that I will split along \n boundaries.
     def initialize(lines, parser_options = {})
       @lines = initialize_lines(lines)
-      @custom_keywords = []
       @current_headline = nil
       @document = Orgmode::Elements::Document.new
-      @in_buffer_settings = {}
       @header_lines = []
       @link_abbrevs = {}
-      @options = {}
       @parser_options = parser_options
 
       #
@@ -132,13 +116,25 @@ module Orgmode
       parse_lines @lines
     end
 
+    def buffer_settings
+      document&.buffer_settings
+    end
+
+    def custom_keywords
+      document&.custom_keywords
+    end
+
     def headlines
       document.headlines
     end
 
+    def options
+      document&.options
+    end
+
     # Check include file availability and permissions
     def check_include_file(file_path)
-      can_be_included = File.exist? file_path
+      can_be_included = File.exist?(file_path)
 
       unless ENV['ORG_RUBY_INCLUDE_ROOT'].nil?
         # Ensure we have full paths
@@ -209,10 +205,7 @@ module Orgmode
             document.store_headline(line)
             @current_headline = line
           end
-          # If there is a setting on this line, remember it.
-          line.in_buffer_setting? do |key, value|
-            store_in_buffer_setting key.upcase, value
-          end
+          document.store_buffer_settings(line)
 
           mode = line.paragraph_type if line.begin_block?
 
@@ -349,7 +342,7 @@ module Orgmode
     def to_html
       mark_trees_for_export
       export_options = {
-        decorate_title: in_buffer_settings['TITLE'],
+        decorate_title: buffer_settings.fetch('TITLE', nil),
         export_footnotes: export_footnotes?,
         export_heading_number: export_heading_number?,
         export_todo: export_todo?,
@@ -365,13 +358,12 @@ module Orgmode
       output = StringIO.new
       output_buffer = HtmlOutputBuffer.new(output, document, export_options)
 
-      document.title = title || document.headlines.first&.output_text
       output_buffer.wrap_html(@parser_options[:wrap_html])
 
-      if title?
+      if document.buffer_settings.fetch('TITLE', nil)
         # If we're given a new title, then just create a new line
         # for that title.
-        title_line = Line.new(title, self, :title)
+        title_line = Line.new(document.title, self, :title)
         translate([title_line], output_buffer)
       end
       translate(@header_lines, output_buffer) unless skip_header_lines?
@@ -388,14 +380,6 @@ module Orgmode
 
       rp = RubyPants.new(output.string)
       rp.to_html
-    end
-
-    def title?
-      !in_buffer_settings['TITLE'].nil?
-    end
-
-    def title
-      in_buffer_settings['TITLE']
     end
 
     protected
@@ -466,27 +450,5 @@ module Orgmode
         end
       end
     end
-
-    # Stores an in-buffer setting.
-    def store_in_buffer_setting(key, value)
-      if key == 'OPTIONS'
-
-        # Options are stored in a hash. Special-case.
-        value.scan(/([^ ]*):((((\(.*\))))|([^ ])*)/) do |o, v|
-          @options[o] = v
-        end
-      elsif key =~ /^(TODO|SEQ_TODO|TYP_TODO)$/
-        # Handle todo keywords specially.
-        value.split.each do |keyword|
-          keyword.gsub!(/\(.*\)/, '') # Get rid of any parenthetical notes
-          keyword = Regexp.escape(keyword)
-          next if keyword == '\\|' # Special character in the todo format, not really a keyword
-
-          @custom_keywords << keyword
-        end
-      else
-        in_buffer_settings[key] = value
-      end
-    end
-  end                             # class Parser
-end                               # module Orgmode
+  end
+end

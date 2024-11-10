@@ -62,7 +62,7 @@ module Orgmode
           let(:headline) { Headline.new("** ARE Headline", parser) }
 
           before do
-            allow(parser).to receive(:title?).and_return false
+            allow(parser).to receive(:buffer_settings).and_return Hash.new
             allow(parser).to receive(:custom_keywords).and_return(keywords)
           end
 

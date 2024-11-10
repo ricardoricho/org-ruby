@@ -89,7 +89,7 @@ module Orgmode
     end
 
     def headline_level
-      title_offset = (parser && parser.title?) ? 1 : 0
+      title_offset = parser&.buffer_settings&.fetch('TITLE', nil) ? 1 : 0
       level - title_offset
     end
 
@@ -110,7 +110,7 @@ module Orgmode
       match = RegexpHelper.headline.match(@line)
       return if match.nil?
 
-      new_offset = (parser && parser.title?) ? offset + 1 : offset
+      new_offset = parser&.buffer_settings&.fetch('TITLE', nil) ? offset + 1 : offset
       @level = $&.strip.length + new_offset
       @headline_text = $'.strip
       remove_tags!

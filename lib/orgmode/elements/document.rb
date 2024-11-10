@@ -1,18 +1,39 @@
 module Orgmode
   module Elements
     class Document
-      attr_reader :headlines, :footnotes, :targets
-      attr_accessor :title
+      attr_reader :buffer_settings, :headlines, :footnotes, :targets, :options,
+                  :custom_keywords
+      attr_writer :title
 
       def initialize
-        @headlines = []
+        @buffer_settings = {}
+        @options = {}
         @footnotes = []
+        @headlines = []
+        @custom_keywords = []
         @targets = []
         @title = ""
       end
 
-      def store_headline(line)
-        headlines.push(line)
+      def store_buffer_settings(line)
+        line.in_buffer_setting? do |key, value|
+          if key == 'OPTIONS'
+            # Options are stored in a hash. Special-case.
+            value.scan(/([^ ]*):((((\(.*\))))|([^ ])*)/) do |o, v|
+              options[o] = v
+            end
+          elsif key =~ /^(TODO|SEQ_TODO|TYP_TODO)$/
+            # Handle todo keywords specially.
+            value.split.each do |keyword|
+              keyword.gsub!(/\(.*\)/, '') # Get rid of any parenthetical notes
+              keyword = Regexp.escape(keyword)
+              next if keyword == '\\|' # Special character in the todo format, not really a keyword
+              custom_keywords.push keyword
+            end
+          else
+            buffer_settings.store(key, value)
+          end
+        end
       end
 
       def store_footnote(line)
@@ -38,6 +59,10 @@ module Orgmode
         end
       end
 
+      def store_headline(line)
+        headlines.push(line)
+      end
+
       def store_target(line)
         return unless line.target?
 
@@ -47,6 +72,10 @@ module Orgmode
           target = { index: target_index, content: content }
           @targets.push(target)
         end
+      end
+
+      def title
+        buffer_settings.fetch('TITLE', headlines.first&.output_text)
       end
     end
   end

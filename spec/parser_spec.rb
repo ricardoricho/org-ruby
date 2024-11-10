@@ -55,10 +55,11 @@ describe Orgmode::Parser do
 
   it "should load in-buffer settings" do
     parser = Orgmode::Parser.load(FreeformFile)
-    expect(parser.in_buffer_settings.count).to eq(12)
-    expect(parser.in_buffer_settings["TITLE"]).to eql("Freeform")
-    expect(parser.in_buffer_settings["EMAIL"]).to eql("bdewey@gmail.com")
-    expect(parser.in_buffer_settings["LANGUAGE"]).to eql("en")
+
+    expect(parser.buffer_settings.count).to eq(12)
+    expect(parser.buffer_settings.fetch("TITLE")).to eql("Freeform")
+    expect(parser.buffer_settings.fetch("EMAIL")).to eql("bdewey@gmail.com")
+    expect(parser.buffer_settings.fetch("LANGUAGE")).to eql("en")
   end
 
   it "should understand OPTIONS" do
@@ -108,7 +109,7 @@ describe Orgmode::Parser do
 
   it "should skip in-buffer settings inside EXAMPLE blocks" do
     parser = Orgmode::Parser.load(FreeformExampleFile)
-    expect(parser.in_buffer_settings.count).to eq(0)
+    expect(parser.buffer_settings.count).to eq(0)
   end
 
   it "should return a textile string" do
