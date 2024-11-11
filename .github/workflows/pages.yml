@@ -44,8 +44,10 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           base_path: "public"
-      - name: Build documentation
-        run: bundle exec rake documentation:build
+      - name: Build pages
+        run: bundle exec rake github:pages
+      - name: Extracting css
+        run: bundle exec rougify style monokai > public/monokai.css
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

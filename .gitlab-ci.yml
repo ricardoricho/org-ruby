@@ -14,6 +14,7 @@ specs:
 pages:
   script:
     - bundle exec rake gitlab:page
+    - bundle exec rougify style monokai > public/monokai.css
   artifacts:
     paths:
       # The folder that contains the files to be exposed at the Page URL
