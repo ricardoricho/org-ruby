@@ -85,6 +85,11 @@ module Orgmode
     describe '.headline' do
       # should recognize headlines that start with asterisks
       it { expect(regexp.headline).to match "* Headline" }
+      it 'captures level and text' do
+        match = regexp.headline.match "*** Header with level   tags:expr"
+        expect(match[:level]).to eq "***"
+        expect(match[:text]).to eq "Header with level   tags:expr"
+      end
       it { expect(regexp.headline).not_to match " ** Headline" }
       it { expect(regexp.headline).not_to match "\t\t * Headline" }
       it { expect(regexp.headline).not_to match " Headline" }

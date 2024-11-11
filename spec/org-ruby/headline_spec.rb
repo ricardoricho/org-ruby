@@ -12,13 +12,33 @@ module Orgmode
       end
     end
 
-    describe 'slugify' do
-      it 'return headline text in lowercase' do
-        expect(headline.slugify).to eq 'this-is-a-headline'
+    describe '#level' do
+      let(:headline) { Headline.new "* Headline" }
+
+      it 'tell the number of bullets of headline' do
+        expect(headline.level).to eq 1
       end
 
-      it 'return headline text join replacing spaces with "-"' do
-        expect(headline.slugify).to eq 'this-is-a-headline'
+      example '** Two has level 2' do
+        headline = Headline.new "** Two"
+        expect(headline.level).to eq 2
+      end
+      example '*** Three has level 3' do
+        headline = Headline.new "*** Three"
+        expect(headline.level).to eq 3
+      end
+      example '**** Four has level 4' do
+        headline = Headline.new "**** Four"
+        expect(headline.level).to eq 4
+      end
+
+      context 'when offset is pass on creation' do
+        let(:offset) { 2 }
+        let(:headline) { Headline.new "** Headline", nil, offset }
+
+        it 'adds offset to level' do
+          expect(headline.level).to be 4
+        end
       end
     end
 
@@ -79,6 +99,16 @@ module Orgmode
             line = Headline.new("** Y Text", parser)
             expect(line.headline_text).to eq 'Y Text'
           end
+        end
+      end
+
+      describe 'slugify' do
+        it 'return headline text in lowercase' do
+          expect(headline.slugify).to eq 'this-is-a-headline'
+        end
+
+        it 'return headline text join replacing spaces with "-"' do
+          expect(headline.slugify).to eq 'this-is-a-headline'
         end
       end
     end

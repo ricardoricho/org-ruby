@@ -31,7 +31,7 @@ module Orgmode
     end
 
     def headline
-      /^\*+\s+/
+      /^(?<level>\*+)\s+(?<text>.*)/
     end
 
     def horizontal_rule

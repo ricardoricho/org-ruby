@@ -2,21 +2,6 @@ require 'spec_helper'
 
 describe Orgmode::Headline do
 
-  it "should properly determine headline level" do
-    samples = ["* one", "** two", "*** three", "**** four"]
-    expected = 1
-    samples.each do |sample|
-      h = Orgmode::Headline.new sample
-      expect(h.level).to eql(expected)
-      expected += 1
-    end
-  end
-
-  it "should properly determine headline level with offset" do
-    h = Orgmode::Headline.new("* one", nil, 1)
-    expect(h.level).to eql(2)
-  end
-
   it "should find simple headline text" do
     h = Orgmode::Headline.new "*** sample"
     expect(h.headline_text).to eql("sample")

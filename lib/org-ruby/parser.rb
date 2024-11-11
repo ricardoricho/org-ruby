@@ -107,18 +107,9 @@ module Orgmode
 
     # Check include file availability and permissions
     def check_include_file(file_path)
-      can_be_included = File.exist?(file_path)
-
-      unless ENV['ORG_RUBY_INCLUDE_ROOT'].nil?
-        # Ensure we have full paths
-        root_path = File.expand_path ENV['ORG_RUBY_INCLUDE_ROOT']
-        file_path = File.expand_path file_path
-
-        # Check if file is in the defined root path and really exists
-        can_be_included = false if file_path.slice(0, root_path.length) != root_path
-      end
-
-      can_be_included
+      root_file_path =
+        File.expand_path(ENV.fetch('ORG_RUBY_INCLUDE_ROOT', ''), file_path)
+      File.exist?(root_file_path)
     end
 
     def parse_lines(lines)
@@ -323,7 +314,7 @@ module Orgmode
         skip_syntax_highlight: @parser_options[:skip_syntax_highlight],
         use_sub_superscripts: use_sub_superscripts?
       }
-      export_options[:skip_tables] = true unless export_tables?
+      export_options[:skip_tables] = !export_tables?
       output = StringIO.new
       output_buffer = HtmlOutputBuffer.new(output, document, export_options)
 

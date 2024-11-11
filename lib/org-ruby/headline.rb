@@ -60,7 +60,7 @@ module Orgmode
 
     def remove_tags!
       match = RegexpHelper.tags.match(headline_text)
-      return nil unless match
+      return nil if match.nil?
 
       @tags = match[:tags].split(':')
       @headline_text.slice!($&)
@@ -111,8 +111,8 @@ module Orgmode
       return if match.nil?
 
       new_offset = parser&.buffer_settings&.fetch('TITLE', nil) ? offset + 1 : offset
-      @level = $&.strip.length + new_offset
-      @headline_text = $'.strip
+      @level = match[:level].length + new_offset
+      @headline_text = match[:text]
       remove_tags!
       remove_keyword!
     end
