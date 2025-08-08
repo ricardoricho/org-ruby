@@ -30,3 +30,11 @@ Sample relative link to .svg:
 Sample relative link to .svgz:
 
 [[file:images/conform-viewers-01-t.svgz]]
+
+Image with alt description
+
+This image should use the description as the alt attribute:
+
+[[file:/images/emacs-logo.png][A screenshot of our new UI]]
+
+This is an inline [[file:images/emacs-logo.svg][emacs-logo]] from a link.

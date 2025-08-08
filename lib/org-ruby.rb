@@ -1,6 +1,7 @@
 # internal requires
 require 'org-ruby/version'
 require 'orgmode/elements/document'
+require 'orgmode/elements/link'
 require 'org-ruby/parser'
 require 'org-ruby/regexp_helper'
 require 'org-ruby/line'

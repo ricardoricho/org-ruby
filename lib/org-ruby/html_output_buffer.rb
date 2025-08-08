@@ -431,15 +431,8 @@ module Orgmode
           text.sub!(/\Afile(|\+emacs|\+sys):(?=[^\s]+\Z)/, "")
         end
 
-        if link =~ @re_help.org_image_file_regexp
-          quote_tags "<img src=\"#{link}\" alt=\"#{defi || link}\" />"
-        else
-          if defi =~ @re_help.org_image_file_regexp
-            defi = quote_tags "<img src=\"#{defi}\" alt=\"#{defi}\" />"
-          end
-          link = @options[:link_abbrevs][link] if @options[:link_abbrevs].has_key? link
-          quote_tags("<a href=\"#{link}\">") + (defi || link) + quote_tags("</a>")
-        end
+        org_link = Orgmode::Elements::Link.new(document, link, defi)
+        quote_tags org_link.html_tag
       end
     end
 

@@ -1,5 +1,6 @@
 require 'org-ruby/line_regexp'
 require 'org-ruby/headline_regexp'
+require 'org-ruby/image_regexp'
 
 module Orgmode
 
@@ -21,6 +22,7 @@ module Orgmode
   class RegexpHelper
     extend LineRegexp
     extend HeadlineRegexp
+    extend ImageRegexp
 
     ######################################################################
     # EMPHASIS
