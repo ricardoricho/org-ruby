@@ -431,24 +431,8 @@ module Orgmode
           text.sub!(/\Afile(|\+emacs|\+sys):(?=[^\s]+\Z)/, "")
         end
 
-        # We don't add a description for images in links, because its
-        # empty value forces the image to be inlined.
-        defi ||= link unless link =~ @re_help.org_image_file_regexp
-
-        if defi =~ @re_help.org_image_file_regexp
-          defi = quote_tags "<img src=\"#{defi}\" alt=\"#{defi}\" />"
-        end
-
-        if defi
-          link = options[:link_abbrevs][link] if options[:link_abbrevs].has_key?(link)
-          target = document.targets.find do |target|
-            target[:content] == defi
-          end
-          link = "#tg.#{target[:index]}" if target
-          quote_tags("<a href=\"#{link}\">") + defi + quote_tags("</a>")
-        else
-          quote_tags "<img src=\"#{link}\" alt=\"#{link}\" />"
-        end
+        org_link = Orgmode::Elements::Link.new(document, link, defi)
+        quote_tags org_link.html_tag
       end
     end
 

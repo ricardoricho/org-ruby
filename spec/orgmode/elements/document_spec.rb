@@ -1,4 +1,5 @@
 require 'spec_helper'
+
 module Orgmode
   module Elements
     RSpec.describe Document do
