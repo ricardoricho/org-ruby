@@ -46,7 +46,7 @@ module Orgmode
         expect(regexp.footnote_definition).not_to match "\t[fn:label]"
       end
       it { expect(regexp.footnote_definition).to match '[fn:label] contents' }
-      it 'caputre :label' do
+      it 'capture :label' do
         match = regexp.footnote_definition.match('[fn:la-be_l]')
         expect(match[:label]).to eq 'la-be_l'
         expect(match[:contents]).to eq ''
