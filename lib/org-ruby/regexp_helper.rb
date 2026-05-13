@@ -170,10 +170,6 @@ module Orgmode
                  "(?=#{post_emphasis})")
     end
 
-    def org_image_file_regexp
-      /\.(gif|jpe?g|webp|p(?:bm|gm|n[gm]|pm)|svgz?|tiff?|x[bp]m)/i
-    end
-
     private
 
     def pre_emphasis_regexp

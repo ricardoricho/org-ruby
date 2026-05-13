@@ -61,10 +61,10 @@ module Orgmode
 
         # We don't add a description for images in links, because its
         # empty value forces the image to be inlined.
-        defi ||= link unless link =~ @re_help.org_image_file_regexp
+        defi ||= link unless RegexpHelper.image_file.match(link)
         link = link.gsub(/ /, "%%20")
 
-        if defi =~ @re_help.org_image_file_regexp
+        if RegexpHelper.image_file.match(defi)
           defi = "!#{defi}(#{defi})!"
         elsif defi
           defi = "\"#{defi}\""
