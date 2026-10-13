@@ -38,7 +38,7 @@ module Orgmode
       /^\s*-{5,}\s*$/
     end
 
-    def in_buffer_setting
+    def buffer_setting
       /^#\+(?<key>\w+):\s*(?<value>.*)$/
     end
 

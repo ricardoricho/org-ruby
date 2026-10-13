@@ -17,23 +17,32 @@ module Orgmode
       end
 
       def store_buffer_settings(line)
-        line.in_buffer_setting? do |key, value|
-          if key == 'OPTIONS'
-            # Options are stored in a hash. Special-case.
-            value.scan(/([^ ]*):((((\(.*\))))|([^ ])*)/) do |o, v|
-              options[o] = v
-            end
-          elsif key =~ /^(TODO|SEQ_TODO|TYP_TODO)$/
-            # Handle todo keywords specially.
-            value.split.each do |keyword|
-              keyword.gsub!(/\(.*\)/, '') # Get rid of any parenthetical notes
-              keyword = Regexp.escape(keyword)
-              next if keyword == '\\|' # Special character in the todo format, not really a keyword
-              custom_keywords.push keyword
-            end
+        line.buffer_setting do |key, value|
+          case key
+          when 'OPTIONS'
+            store_options(value)
+          when 'TODO', 'SEQ_TODO', 'TYP_TODO'
+            store_keywords(value)
           else
             buffer_settings.store(key, value)
           end
+        end
+      end
+
+      def store_options(settings)
+        # Options are stored in a hash. Special-case.
+        settings.scan(/([^ ]*):((((\(.*\))))|([^ ])*)/) do |option, option_value|
+          options[option] = option_value
+        end
+      end
+
+      def store_keywords(keywords)
+        # Handle todo keywords specially.
+        keywords.split.each do |keyword|
+          keyword.gsub!(/\(.*\)/, '') # Get rid of any parenthetical notes
+          keyword = Regexp.escape(keyword)
+          next if keyword == '\\|' # Special character in the todo format, not really a keyword
+          custom_keywords.push keyword
         end
       end
 

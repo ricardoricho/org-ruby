@@ -2,6 +2,49 @@ require 'spec_helper'
 
 describe Orgmode::Line do
 
+  describe "buffer_setting?" do
+    let(:line) { Orgmode::Line.new(buffer_setting) }
+
+    context "when is not a 'comment' paragraph" do
+      let(:buffer_setting) { "#+OPTION: option" }
+      it "ignore buffer seetting" do
+        line = Orgmode::Line.new buffer_setting, nil, :other
+        expect(line.buffer_setting).to be_falsy
+      end
+    end
+
+    context "when it's an title tag" do
+      let(:buffer_setting) { "#+TITLE: Setting"}
+      it  { expect(line.buffer_setting?).to be_truthy }
+    end
+
+    context "when it's a keword defintition" do
+      let(:buffer_setting) { "#+TODO: STATE WAITING | DONE"}
+      it  { expect(line.buffer_setting?).to be_truthy }
+    end
+  end
+
+  describe "buffer_setting" do
+    let(:line) { Orgmode::Line.new buffer_setting}
+
+    context "when is not a buffer setting" do
+      let(:buffer_setting) { "Not a buffer setting" }
+      it "do nothing" do
+        expect(line.buffer_setting).to be_nil
+      end
+    end
+
+    context "when is a buffer setting" do
+      let(:buffer_setting) { "#+KEY: VALUE" }
+      it "yield key value to a given block" do
+        line.buffer_setting do |key, value|
+          expect(key).to eq "KEY"
+          expect(value).to eq "VALUE"
+        end
+      end
+    end
+  end
+
   it "should tell comments" do
     comments = ["# hello", " # hello" ]
     comments.each do |c|
@@ -50,6 +93,7 @@ describe Orgmode::Line do
       it { expect(line.footnote?).to be_truthy }
     end
   end
+
   it "should tell blank lines" do
     blank = ["", " ", "\t", "\n", "  \t\t\n\n"]
     blank.each do |b|
@@ -208,10 +252,10 @@ describe Orgmode::Line do
       "#+A:" => { :key => "A", :value => "" } # Boundary: Smallest keyword is one letter
     }
     cases.each_pair do |key, value|
-      l = Orgmode::Line.new key
-      expect(l.in_buffer_setting?).to be_truthy
+      line = Orgmode::Line.new key
+      expect(line.buffer_setting?).to be_truthy
       called = nil
-      l.in_buffer_setting? do |k, v|
+      line.buffer_setting do |k, v|
         expect(k).to eql(value[:key])
         expect(v).to eql(value[:value])
         called = true
@@ -230,8 +274,8 @@ describe Orgmode::Line do
     ]
 
     cases.each do |c|
-      l = Orgmode::Line.new c
-      expect(l.in_buffer_setting?).to be_nil
+      line = Orgmode::Line.new c
+      expect(line.buffer_setting?).to be_nil
     end
   end
 

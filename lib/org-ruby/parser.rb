@@ -248,7 +248,7 @@ module Orgmode
     end
 
     def set_name_for_code_block(previous_line, line)
-      previous_line.in_buffer_setting? do |key, value|
+      previous_line.buffer_setting do |key, value|
         line.properties['block_name'] = value if key.downcase == 'name'
       end
     end

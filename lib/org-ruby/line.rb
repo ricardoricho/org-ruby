@@ -254,26 +254,17 @@ module Orgmode
       @line.sub(RegexpHelper.raw_text) { |match| $1 }
     end
 
-    # call-seq:
-    #     line.in_buffer_setting?         => boolean
-    #     line.in_buffer_setting? { |key, value| ... }
-    #
-    # Called without a block, this method determines if the line
-    # contains an in-buffer setting. Called with a block, the block
-    # will get called if the line contains an in-buffer setting with
-    # the key and value for the setting.
-    def in_buffer_setting?
-      return false if @assigned_paragraph_type &&
-                      @assigned_paragraph_type != :comment
-      match = RegexpHelper.in_buffer_setting.match(@line)
+    def buffer_setting(&block)
+      return unless match = buffer_setting?
 
-      if block_given?
-        if match
-          yield match[:key], match[:value]
-        end
-      else
-        match
-      end
+      yield match[:key], match[:value]
+    end
+
+    def buffer_setting?
+      return if @assigned_paragraph_type &&
+                @assigned_paragraph_type != :comment
+
+      RegexpHelper.buffer_setting.match(@line)
     end
 
     # #+TITLE: is special because even though that it can be

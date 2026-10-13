@@ -105,14 +105,20 @@ module Orgmode
       it { expect(regexp.horizontal_rule).not_to match " ---- " }
     end
 
-    describe '.in_buffer_setting' do
+    describe '.buffer_setting' do
       # /^#\+(\w+):\s*(.*)$/
-      it { expect(regexp.in_buffer_setting).to match "#+keyword: value" }
-      it { expect(regexp.in_buffer_setting).not_to match " #+space: beginning" }
+      it { expect(regexp.buffer_setting).to match "#+keyword: value" }
+      it { expect(regexp.buffer_setting).not_to match " #+space: beginning" }
+      it { expect(regexp.buffer_setting).to match "#+OPTIONS: \\n:t end:nil" }
       it 'captures key and value' do
-        match = regexp.in_buffer_setting.match "#+key: value values"
+        match = regexp.buffer_setting.match "#+key: value values"
         expect(match[:key]).to eq 'key'
         expect(match[:value]).to eq 'value values'
+      end
+      example do
+        match = regexp.buffer_setting.match '#+OPTIONS: \n:t end:nil'
+        expect(match[:key]).to eq 'OPTIONS'
+        expect(match[:value]).to eq '\n:t end:nil'
       end
     end
 

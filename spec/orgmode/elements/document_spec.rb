@@ -36,6 +36,36 @@ module Orgmode
           end
         end
       end
+
+      describe '#store_buffer_setting' do
+        let(:line) { Line.new "#+KEY: VALUE" }
+
+        it 'save key and value from setting in a hash' do
+          document.store_buffer_settings(line)
+          expect(document.buffer_settings).to eq({ "KEY" => "VALUE" })
+        end
+
+        context 'when key is OPTIONS' do
+          let(:line) { Line.new "#+OPTIONS: H:3 num:t toc:nil \\n:nil" }
+          let(:options) { { "H" => "3", "num" => "t", "toc" => "nil", "\\n" => "nil" }}
+
+          it 'save options in a hash' do
+            document.store_buffer_settings(line)
+            # expect(document.buffer_settings).to eq({"OPTIONS" => "H:3 num:t toc:nil \\n:nil"})
+            expect(document.options).to eq options
+          end
+        end
+
+        context 'when key is a KEYWORD' do
+          let(:line) { Line.new "#+TODO: DEFINE TODO LIST | AND DONE"}
+          let(:keywords) { %w[DEFINE TODO LIST AND DONE]}
+
+          it 'save keyword in custom_keywords' do
+            document.store_buffer_settings(line)
+            expect(document.custom_keywords).to match_array keywords
+          end
+        end
+      end
     end
   end
 end
