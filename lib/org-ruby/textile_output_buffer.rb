@@ -97,6 +97,10 @@ module Orgmode
       input
     end
 
+    def skip_buffer(line)
+      super(line) || line.table_separator?
+    end
+
     def output_footnotes!
       return if document.footnotes.empty?
 

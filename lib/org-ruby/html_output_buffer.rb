@@ -104,6 +104,10 @@ module Orgmode
       %i[src].include?(mode)
     end
 
+    def skip_buffer(line)
+      super(line) || line.table_separator?
+    end
+
     def skip_syntax_highlight?
       !options[:skip_syntax_highlight]
     end
@@ -318,8 +322,7 @@ module Orgmode
     end
 
     def mode_is_table?(mode)
-      (mode == :table or mode == :table_row or
-       mode == :table_separator or mode == :table_header)
+      %i[table table_row table_separator table_header].include?(mode)
     end
 
     def mode_is_ol?(mode)

@@ -34,6 +34,7 @@ This is similar to the center block:
 ## Within a table, cannot be included
 
 | One                                             | Two   | Three |
+|-------------------------------------------------|-------|-------|
 | #+INCLUDE: "./spec/html_examples/only-list.org" | Five  | Six   |
 | Seven                                           | Eight | Nine  |
 

@@ -2,6 +2,7 @@
 Checking that tables are skipped when directed.
 
 | One   | Two   | Three |
+|-------|-------|-------|
 | Four  | Five  | Six   |
 | Seven | Eight | Nine  |
 

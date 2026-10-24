@@ -19,6 +19,7 @@ removed here, but not for the tables.
 # Table with header
 
 | One   | Two   | Three |
+|-------|-------|-------|
 | Four  | Five  | Six   |
 | Seven | Eight | Nine  |
 
@@ -26,22 +27,31 @@ The separator row should not get printed out.
 
 # Table with complete box
 
+|-------|-------|-------|
 | One   | Two   | Three |
+|-------|-------|-------|
 | Four  | Five  | Six   |
 | Seven | Eight | Nine  |
+|-------|-------|-------|
 
 Only the first row should be a header row.
 
 # Table with extra lines
 
+|-------|--------|--------|
 | One   | Two    | Three  |
+|-------|--------|--------|
 | Four  | Five   | Six    |
 | Seven | Eight  | Nine   |
+|-------|--------|--------|
 | Ten   | Eleven | Twelve |
+|-------|--------|--------|
 
 Only the first row should be a header row.
 
 # Fix error when table starts with hline (Thanks @til!)
+|-----|-----|
 | foo | bar |
+|-----|-----|
 |   1 |   2 |
 https://github.com/bdewey/org-ruby/pull/34

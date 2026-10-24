@@ -91,6 +91,8 @@ module Orgmode
       when %i[definition_term list_item table_row table_header
               horizontal_rule].include?(line.paragraph_type)
         "\n#{line.output_text.strip}"
+      when line.table_separator?
+        "\n#{line.output_text.strip.gsub('+','|')}"
       when line.paragraph_type == :paragraph
         "\n""#{buffer_indentation}#{line.output_text.strip}"
       else ''
