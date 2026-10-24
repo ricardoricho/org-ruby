@@ -1,19 +1,13 @@
 module Orgmode
-
   class MarkdownOutputBuffer < OutputBuffer
 
     def initialize(output, opts = {})
       super(output)
       @options = opts
-      @custom_blocktags = {} if @options[:markup_file]
-
       if @options[:markup_file]
+        @custom_blocktags = {}
         do_custom_markup
       end
-    end
-
-    def push_mode(mode, indent, properties={})
-      super(mode, indent, properties)
     end
 
     def pop_mode
@@ -34,19 +28,25 @@ module Orgmode
 
     # Handles inline formatting for markdown.
     def inline_formatting(input)
-      @re_help.rewrite_emphasis(input) do |marker, body|
+      rewrite_emphasis(input)
+      rewrite_sub_superscripts(input)
+      rewrite_links(input)
+
+      # Just reuse Textile special symbols for now?
+      Orgmode.special_symbols_to_textile(input)
+      input = @re_help.restore_code_snippets input
+      input
+    end
+
+    def rewrite_emphasis(str)
+      @re_help.rewrite_emphasis(str) do |marker, body|
         m = MarkdownMap[marker]
         "#{m}#{body}#{m}"
       end
-      @re_help.rewrite_subp(input) do |base, type, text|
-        case type
-        when '_'
-          "#{base}<sub>#{text}</sub>"
-        when '^'
-          "#{base}<sup>#{text}</sup>"
-        end
-      end
-      @re_help.rewrite_links input do |link, defi|
+    end
+
+    def rewrite_links(str)
+      @re_help.rewrite_links(str) do |link, defi|
         # We don't add a description for images in links, because its
         # empty value forces the image to be inlined.
         defi ||= link unless RegexpHelper.image_file.match(link)
@@ -60,11 +60,17 @@ module Orgmode
           "[#{link}](#{link})"
         end
       end
+    end
 
-      # Just reuse Textile special symbols for now?
-      Orgmode.special_symbols_to_textile(input)
-      input = @re_help.restore_code_snippets input
-      input
+    def rewrite_sub_superscripts(str)
+      @re_help.rewrite_subp(str) do |base, type, text|
+        case type
+        when '_'
+          "#{base}<sub>#{text}</sub>"
+        when '^'
+          "#{base}<sup>#{text}</sup>"
+        end
+      end
     end
 
     # Flushes the current buffer
@@ -94,7 +100,7 @@ module Orgmode
       @buffer = StringIO.new
     end
 
-    def add_line_attributes headline
+    def add_line_attributes(headline)
       @output.write("#" * headline.level, " ")
     end
   end
