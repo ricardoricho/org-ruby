@@ -34,19 +34,19 @@ module Orgmode
 
       # Just reuse Textile special symbols for now?
       Orgmode.special_symbols_to_textile(input)
-      input = @re_help.restore_code_snippets input
+      input = re_help.restore_code_snippets input
       input
     end
 
     def rewrite_emphasis(str)
-      @re_help.rewrite_emphasis(str) do |marker, body|
+      re_help.rewrite_emphasis(str) do |marker, body|
         m = MarkdownMap[marker]
         "#{m}#{body}#{m}"
       end
     end
 
     def rewrite_links(str)
-      @re_help.rewrite_links(str) do |link, defi|
+      re_help.rewrite_links(str) do |link, defi|
         # We don't add a description for images in links, because its
         # empty value forces the image to be inlined.
         defi ||= link unless RegexpHelper.image_file.match(link)
@@ -63,7 +63,7 @@ module Orgmode
     end
 
     def rewrite_sub_superscripts(str)
-      @re_help.rewrite_subp(str) do |base, type, text|
+      re_help.rewrite_subp(str) do |base, type, text|
         case type
         when '_'
           "#{base}<sub>#{text}</sub>"

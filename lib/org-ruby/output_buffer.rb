@@ -175,7 +175,7 @@ module Orgmode
 
     protected
 
-    attr_reader :block_lang
+    attr_reader :block_lang, :re_help
 
     def indentation_level
       list_indent_stack.length - 1

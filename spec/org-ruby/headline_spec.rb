@@ -77,12 +77,12 @@ module Orgmode
         end
 
         context 'when Parser has custom keywords' do
-          let(:keywords) { %w[THIS ARE ORG KEYWORDS] }
+          let(:keywords) { %w[THIS ARE ORG KEYWORDS WAIT\\[.\\]] }
           let(:parser) { double }
           let(:headline) { Headline.new("** ARE Headline", parser) }
 
           before do
-            allow(parser).to receive(:buffer_settings).and_return Hash.new
+            allow(parser).to receive(:buffer_settings).and_return(Hash.new)
             allow(parser).to receive(:custom_keywords).and_return(keywords)
           end
 
@@ -91,13 +91,18 @@ module Orgmode
           end
 
           example 'Other keyword' do
-            line = Headline.new("** KEYWORDS  Text", parser)
+            line = Headline.new("** KEYWORDS Text", parser)
             expect(line.headline_text).to eq 'Text'
           end
 
           example 'Trick keyword' do
             line = Headline.new("** Y Text", parser)
             expect(line.headline_text).to eq 'Y Text'
+          end
+
+          example 'Keyword that need to escape characters' do
+            line = Headline.new("* WAIT[.] Headline text", parser)
+            expect(line.headline_text).to eq 'Headline text'
           end
         end
       end

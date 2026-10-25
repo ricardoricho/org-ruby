@@ -38,12 +38,12 @@ module Orgmode
 
     # Handles inline formatting for textile.
     def inline_formatting(input)
-      @re_help.rewrite_emphasis(input) do |marker, body|
+      re_help.rewrite_emphasis(input) do |marker, body|
         m = TextileMap[marker]
         "#{m}#{body}#{m}"
       end
 
-      @re_help.rewrite_subp(input) do |type, text|
+      re_help.rewrite_subp(input) do |type, text|
         if type == "_"
           "~#{text}~"
         elsif type == "^"
@@ -51,7 +51,7 @@ module Orgmode
         end
       end
 
-      @re_help.rewrite_links input do |link, defi|
+      re_help.rewrite_links input do |link, defi|
         [link, defi].compact.each do |text|
           # We don't support search links right now. Get rid of it.
           text.sub!(/\A(file:[^\s]+)::[^\s]*?\Z/, "\\1")
@@ -77,12 +77,12 @@ module Orgmode
         end
       end
 
-      @re_help.capture_footnote_definition(input) do |_label, _content|
+      re_help.capture_footnote_definition(input) do |_label, _content|
         # Capture definition and replace it with nil
         nil
       end
 
-      @re_help.rewrite_footnote(input) do |label, content|
+      re_help.rewrite_footnote(input) do |label, content|
         # textile only support numerical names, so we need to do some conversion
         # Try to find the footnote and use its index
         footnote = document.footnotes.find do |footnote|
@@ -93,7 +93,7 @@ module Orgmode
       end
 
       Orgmode.special_symbols_to_textile(input)
-      input = @re_help.restore_code_snippets input
+      input = re_help.restore_code_snippets input
       input
     end
 

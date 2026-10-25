@@ -288,7 +288,7 @@ module Orgmode
     end
 
     def rewrite_sub_superscripts(str)
-      @re_help.rewrite_subp(str) do |base, type, text|
+      re_help.rewrite_subp(str) do |base, type, text|
         case type
         when '_'
           base + quote_tags("<sub>") + text + quote_tags("</sub>")
@@ -302,9 +302,9 @@ module Orgmode
 
     def get_css_attr(mode)
       case
-      when (mode == :src and block_lang.empty?)
+      when (mode == :src && block_lang.empty?)
         " class=\"src\""
-      when (mode == :src and not block_lang.empty?)
+      when (mode == :src && !block_lang.empty?)
         " class=\"src\" lang=\"#{block_lang}\""
       when (mode == :example || mode == :inline_example)
         " class=\"example\""
@@ -383,11 +383,11 @@ module Orgmode
         str.sub!(/\\\\$/, quote_tags("<br />"))
       end
       str = escape_string!(str)
-      str = @re_help.restore_code_snippets(str)
+      str = re_help.restore_code_snippets(str)
     end
 
     def rewrite_emphasis(str)
-      @re_help.rewrite_emphasis(str) do |marker, text|
+      re_help.rewrite_emphasis(str) do |marker, text|
         if marker == "=" || marker == "~"
           escaped_text = escapeHTML(text)
           "<#{Tags[marker][:open]}>#{escaped_text}</#{Tags[marker][:close]}>"
@@ -411,8 +411,8 @@ module Orgmode
     end
 
     def rewrite_footnote(str)
-      @re_help.capture_footnote_definition(str) { nil }
-      @re_help.rewrite_footnote(str) do |label, content|
+      re_help.capture_footnote_definition(str) { nil }
+      re_help.rewrite_footnote(str) do |label, content|
         footnote = document.footnotes.find do |footnote|
           footnote[:label] == label || footnote[:content] == content
         end
@@ -427,7 +427,7 @@ module Orgmode
     end
 
     def rewrite_links(str)
-      @re_help.rewrite_links(str) do |link, defi|
+      re_help.rewrite_links(str) do |link, defi|
         [link, defi].compact.each do |text|
           text.sub!(/\A(file:[^\s]+)::[^\s]*?\Z/, "\\1")
           # We don't support search links right now. Get rid of it.
