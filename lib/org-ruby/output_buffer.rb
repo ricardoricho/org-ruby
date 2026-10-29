@@ -66,8 +66,7 @@ module Orgmode
     def line_get_content(line)
       # Adds the current line to the output buffer
       case
-      when skip_buffer(line)
-        # Don't add to buffer
+      when skip_buffer(line) # Don't add to buffer
         ''
       when line.title?
         add_headline_id(line)

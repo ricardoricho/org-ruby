@@ -173,7 +173,7 @@ module Orgmode
     private
 
     def pre_emphasis_regexp
-      '^|\s|[\(\'"\{\[]'
+      '\s|[-\(\{\'\"]|^'
     end
 
     def markers_regexp

@@ -371,7 +371,6 @@ module Orgmode
     def inline_formatting(str)
       rewrite_emphasis(str)
       rewrite_targets(str)
-
       rewrite_sub_superscripts(str) if options[:use_sub_superscripts]
       rewrite_links(str)
       rewrite_row(str) if @output_type == :table_row

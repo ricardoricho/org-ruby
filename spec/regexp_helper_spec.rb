@@ -7,7 +7,8 @@ describe Orgmode::RegexpHelper do
     it 'match emphasis expresions' do
       expect(helper.org_emphasis_regexp).to match '~code~'
     end
-    example { expect(helper.org_emphasis_regexp).to match '[[a][~a~]]' }
+    example { expect(helper.org_emphasis_regexp).not_to match '[[a][~a~]]' }
+    example { expect(helper.org_emphasis_regexp).to match '[[a][ ~a~]]' }
   end
 
   it "should recognize simple markup" do

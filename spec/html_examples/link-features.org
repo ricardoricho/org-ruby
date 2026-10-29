@@ -52,3 +52,12 @@ sections within documents, etc.
   Links with plain text point to [[target]] and each [[link]] has it's own id.
 
   This is a <<target>> and the <<link>> has ~tg.index~ id.
+
+* Links with emphasis elements in the same line
+
+Emphasis /text/ with [[/poems/all-things][element]] end/
+/emphasis/ [[/link/url][should ignore url links]]
+
+[[/poems/all-things][all things]] (published in /No Purchase/ 3, debt edition, Narrm/Melbourne.)
+
+Text with /emphasis/ and a [[/emphasis/example][ ~emphasis link~ ]]
