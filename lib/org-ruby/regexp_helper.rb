@@ -45,16 +45,22 @@ module Orgmode
     #              non-shy groups here, and don't allow newline here.
     # newline      The maximum number of newlines allowed in an emphasis exp.
 
+    attr_reader :code_snippets # Public for tests, only use in emphasis.
+
     def initialize
       # Set up the emphasis regular expression.
-      @code_snippet_stack = []
+      @code_snippets = []
     end
 
     # Finds all emphasis matches in a string.
     # Supply a block that will get the marker and body as parameters.
-    def match_all(str)
-      str.scan(org_emphasis_regexp) do |_match|
-        yield Regexp.last_match[2], Regexp.last_match[3]
+    def match_all(str, &block)
+      if block_given?
+        str.scan(org_emphasis_regexp) do |_match|
+          yield Regexp.last_match[2], Regexp.last_match[3]
+        end
+      else
+        str.scan(org_emphasis_regexp)
       end
     end
 
@@ -79,10 +85,9 @@ module Orgmode
     # replace "*bold*", "/italic/", and "=code=",
     # respectively. (Clearly this sample string will use HTML-like
     # syntax, assuming +map+ is defined appropriately.)
-    def rewrite_emphasis(str)
+    def rewrite_emphasis(str, &block)
       # escape the percent signs for safe restoring code snippets
       str.gsub!(/%/, "%%")
-      format_str = "%s"
       str.gsub!(org_emphasis_regexp) do |_match|
         pre = Regexp.last_match(1)
         # preserve the code snippet from further formatting
@@ -90,8 +95,8 @@ module Orgmode
         if %w[= ~].include?(Regexp.last_match(2))
           # code is not formatted, so turn to single percent signs
           inner.gsub!(/%%/, "%")
-          @code_snippet_stack.push inner
-          "#{pre}#{format_str}"
+          @code_snippets.push inner
+          "#{pre}%s"
         else
           "#{pre}#{inner}"
         end
@@ -121,31 +126,6 @@ module Orgmode
       end
     end
 
-    # = Summary
-    #
-    # Rewrite org-mode links in a string to markup suitable to the
-    # output format.
-    #
-    # = Usage
-    #
-    # Give this a block that expect the link and optional friendly
-    # text. Return how that link should get formatted.
-    #
-    # = Example
-    #
-    #   re = RegexpHelper.new
-    #   result = re.rewrite_links("[[http://www.bing.com]] and [[http://www.hotmail.com][Hotmail]]") do |link, text}
-    #       text ||= link
-    #       "<a href=\"#{link}\">#{text}</a>"
-    #    end
-    #
-    # In this example, the block body will get called two times. In the
-    # first instance, +text+ will be nil (the org-mode markup gives no
-    # friendly text for the link +http://www.bing.com+. In the second
-    # instance, the block will get text of *Hotmail* and the link
-    # +http://www.hotmail.com+. In both cases, the block returns an
-    # HTML-style link, and that is how things will get recorded in
-    # +result+.
     def rewrite_links(str)
       str.gsub!(RegexpHelper.org_link) do |_match|
         yield Regexp.last_match['url'], Regexp.last_match['friendly_text']
@@ -153,12 +133,13 @@ module Orgmode
       str.gsub!(org_angle_link_text_regexp) do |_match|
         yield Regexp.last_match(1), nil
       end
-
-      str # for testing
     end
 
     def restore_code_snippets(str)
-      sprintf(str, *@code_snippet_stack).tap { @code_snippet_stack = [] }
+      # Replace all %s strings with the accumulated code_snippets
+      sprintf(str, *code_snippets).tap do
+        @code_snippets = []
+      end
     end
 
     def org_emphasis_regexp
