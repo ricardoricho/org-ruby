@@ -241,7 +241,7 @@ module Orgmode
     end
 
     def html_buffer_code_block_indent(line)
-      if mode_is_code?(current_mode) && !line.block_type
+      if mode_is_code?(current_mode) && !line.block_name
         # Determines the amount of whitespaces to be stripped at the
         # beginning of each line in code block.
         if line.paragraph_type != :blank

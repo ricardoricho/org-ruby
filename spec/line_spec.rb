@@ -189,13 +189,13 @@ describe Orgmode::Line do
     begin_examples.each_key do |str|
       line = Orgmode::Line.new str
       expect(line.begin_block?).to be_truthy
-      expect(line.block_type).to eql(begin_examples[str])
+      expect(line.block_name).to eql(begin_examples[str])
     end
 
     end_examples.each_key do |str|
       line = Orgmode::Line.new str
       expect(line.end_block?).to be_truthy
-      expect(line.block_type).to eql(end_examples[str])
+      expect(line.block_name).to eql(end_examples[str])
     end
   end
 

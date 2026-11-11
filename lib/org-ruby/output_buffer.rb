@@ -75,9 +75,9 @@ module Orgmode
         ''
       when line.raw_text? && line.raw_text_tag == buffer_tag
         "\n#{line.output_text}"
-      when preserve_whitespace? && line.block_type
+      when preserve_whitespace? && line.block_name
         ''
-      when preserve_whitespace? && !line.block_type
+      when preserve_whitespace? && !line.block_name
         "\n#{line.output_text}"
       when line.assigned_paragraph_type == :code
         # If the line is contained within a code block but we should

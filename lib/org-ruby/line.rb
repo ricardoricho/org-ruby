@@ -54,7 +54,7 @@ module Orgmode
     # Tests if a line is a comment.
     def comment?
       return @assigned_paragraph_type == :comment if @assigned_paragraph_type
-      return block_type.casecmp("COMMENT") if begin_block? || end_block?
+      return block_name.casecmp("COMMENT") if begin_block? || end_block?
 
       RegexpHelper.comment.match(@line)
     end
@@ -199,23 +199,21 @@ module Orgmode
     end
 
     def code_block?
-      block_type =~ /^(EXAMPLE|SRC)$/i
+      block_match && %w[src example].include?(block_name.downcase)
     end
 
     def block_header_arguments
-      header_arguments = { }
+      header_arguments = {}
+      return header_arguments unless block_match
 
-      if block_match
-        header_arguments_string = block_match[5]
-        harray = header_arguments_string.split(' ')
-        harray.each_with_index do |arg, i|
-          next_argument = harray[i + 1]
-          if arg =~ /^:/ && not(next_argument.nil? || next_argument =~ /^:/)
-            header_arguments[arg] = next_argument
-          end
+      header_arguments_string = block_match[:arguments]
+      harray = header_arguments_string.split(' ')
+      harray.each_with_index do |arg, i|
+        next_argument = harray[i + 1]
+        if arg =~ /^:/ && !(next_argument.nil? || next_argument =~ /^:/)
+          header_arguments[arg] = next_argument
         end
       end
-
       header_arguments
     end
 
