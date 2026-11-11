@@ -179,40 +179,38 @@ module Orgmode
     end
 
     def begin_block?
-      match = RegexpHelper.block.match(@line)
-      match && match[1].downcase == 'begin'
+      block_match && block_match[:type].downcase == 'begin'
     end
 
     def end_block?
-      match = RegexpHelper.block.match(@line)
-      match && match[1].downcase == 'end'
+      block_match && block_match[:type].downcase == 'end'
     end
 
-    def block_type
-      $2 if RegexpHelper.block.match(@line)
+    def block_name
+      block_match && block_match[:name]
     end
 
     def block_lang
-      $3 if RegexpHelper.block.match(@line)
+      block_match && block_match[:language]
+    end
+
+    def block_switches
+      block_match && block_match[:switches]
     end
 
     def code_block?
       block_type =~ /^(EXAMPLE|SRC)$/i
     end
 
-    def block_switches
-      $4 if RegexpHelper.block.match(@line)
-    end
-
     def block_header_arguments
       header_arguments = { }
 
-      if RegexpHelper.block.match(@line)
-        header_arguments_string = $5
+      if block_match
+        header_arguments_string = block_match[5]
         harray = header_arguments_string.split(' ')
         harray.each_with_index do |arg, i|
           next_argument = harray[i + 1]
-          if arg =~ /^:/ and not (next_argument.nil? or next_argument =~ /^:/)
+          if arg =~ /^:/ && not(next_argument.nil? || next_argument =~ /^:/)
             header_arguments[arg] = next_argument
           end
         end
@@ -360,8 +358,13 @@ module Orgmode
       end
     end
 
-    ######################################################################
     private
+
+    def block_match
+      return @block_match unless @block_match.nil?
+
+      @block_match = RegexpHelper.block.match(@line)
+    end
 
     # This function is an internal helper for determining the paragraph
     # type of a line... for instance, if the line is a comment or contains

@@ -9,7 +9,7 @@ module Orgmode
     # 3) switches (e.g. -n -r -l "asdf")
     # 4) header arguments (:hello world)
     def block
-      /^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?\s*([^\":\n]*\"[^\"\n*]*\"[^\":\n]*|[^\":\n]*)?\s*([^\n]*)?/i
+      /^\s*#\+(?<type>BEGIN|END)_(?<name>\w*)\s*(?<language>[0-9A-Za-z_\-]*)?\s*(?<switches>[^\":\n]*\"[^\"\n*]*\"[^\":\n]*|[^\":\n]*)?\s*(?<arguments>[^\n]*)?/i
     end
 
     # Lines starting with zero or more whitespace characters

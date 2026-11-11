@@ -21,6 +21,16 @@ module Orgmode
       it { expect(regexp.block).to match ' #+end_block :foo' }
       it { expect(regexp.block).to match ' #+end_block -s :foo' }
       it { expect(regexp.block).to match ' #+end_block' }
+      it 'capture block data' do
+        # https://orgmode.org/worg/org-syntax.html#Blocks
+        line ="  #+begin_src ruby --switch -i option :tangle ~/ruby :exports both"
+        match = regexp.block.match line
+        expect(match[:type]).to eq 'begin'
+        expect(match[:name]).to eq 'src'
+        expect(match[:language]).to eq 'ruby'
+        expect(match[:switches]).to eq '--switch -i option '
+        expect(match[:arguments]).to eq ':tangle ~/ruby :exports both'
+      end
     end
 
     describe '.comment' do
