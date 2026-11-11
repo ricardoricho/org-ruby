@@ -54,7 +54,7 @@ module Orgmode
     # Tests if a line is a comment.
     def comment?
       return @assigned_paragraph_type == :comment if @assigned_paragraph_type
-      return block_name.casecmp("COMMENT") if begin_block? || end_block?
+      return block_name == "comment" if begin_block? || end_block?
 
       RegexpHelper.comment.match(@line)
     end
@@ -187,7 +187,9 @@ module Orgmode
     end
 
     def block_name
-      block_match && block_match[:name]
+      return unless block_match
+
+      @block_name ||= block_match[:name].downcase
     end
 
     def block_lang
@@ -199,7 +201,7 @@ module Orgmode
     end
 
     def code_block?
-      block_match && %w[src example].include?(block_name.downcase)
+      block_match && %w[src example].include?(block_name)
     end
 
     def block_header_arguments
@@ -310,17 +312,16 @@ module Orgmode
         :property_drawer_item
       when metadata?
         :metadata
-      when block_type
-        if block_should_be_exported?
-          case block_type.downcase.to_sym
-          when :center, :comment, :example, :html, :quote, :src
-            block_type.downcase.to_sym
-          else
-            :comment
-          end
-        else
+      when block_name && block_should_be_exported?
+        block_name.to_sym
+        # case block_name.downcase.to_sym
+        # when :center, :comment, :example, :html, :quote, :src
+        #   block_name.downcase.to_sym
+        # else
+        #   :comment
+        # end
+      when block_name && !block_should_be_exported?
           :comment
-        end
       when title?
         :title
       when raw_text? # order is important! Raw text can be also a comment

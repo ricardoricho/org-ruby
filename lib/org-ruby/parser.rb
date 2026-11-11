@@ -254,11 +254,9 @@ module Orgmode
     end
 
     def set_mode_for_results_block_contents(previous_line, line)
-      if previous_line.start_of_results_code_block? \
-        || (previous_line.assigned_paragraph_type == :comment)
-        unless @next_results_block_should_be_exported || (line.paragraph_type == :blank)
+      if (previous_line.start_of_results_code_block? || previous_line.assigned_paragraph_type == :comment) &&
+         !(@next_results_block_should_be_exported || line.paragraph_type == :blank)
           line.assigned_paragraph_type = :comment
-        end
       end
     end
 
