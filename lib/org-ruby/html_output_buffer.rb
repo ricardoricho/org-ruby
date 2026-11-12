@@ -200,8 +200,7 @@ module Orgmode
       if skip_syntax_hightlight?
         @buffer.string = escapeHTML(@buffer.string)
       else
-        lang = normalize_lang @block_lang
-        @buffer.string = highlight(@buffer.string, lang)
+        @buffer.string = highlight(@buffer.string, normalize_lang)
       end
     end
 
@@ -449,18 +448,16 @@ module Orgmode
       end
     end
 
-    def normalize_lang(lang)
-      case lang
+    def normalize_lang
+      case block_lang
       when 'emacs-lisp', 'common-lisp', 'lisp'
         'scheme'
       when 'ipython'
         'python'
       when 'js2'
         'javascript'
-      when ''
-        'text'
       else
-        lang
+        block_lang
       end
     end
 

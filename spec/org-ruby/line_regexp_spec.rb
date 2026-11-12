@@ -31,6 +31,13 @@ module Orgmode
         expect(match[:switches]).to eq '--switch -i option '
         expect(match[:arguments]).to eq ':tangle ~/ruby :exports both'
       end
+
+      example do
+        line = "#+begin_src"
+        match = regexp.block.match line
+        expect(match[:type]).to eq 'begin'
+        expect(match[:language]).to be_empty
+      end
     end
 
     describe '.comment' do
