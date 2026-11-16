@@ -41,8 +41,9 @@ module Orgmode
         keywords.split.each do |keyword|
           keyword.gsub!(/\(.*\)/, '') # Get rid of any parenthetical notes
           keyword = Regexp.escape(keyword)
-          next if keyword == '\\|' # Special character in the todo format, not really a keyword
-          custom_keywords.push keyword
+
+          # Special character in the todo format, not really a keyword
+          custom_keywords.push keyword unless keyword == '\\|'
         end
       end
 

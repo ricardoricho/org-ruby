@@ -102,7 +102,7 @@ module Orgmode
     end
 
     def plain_list?
-      ordered_list? or unordered_list? or definition_list?
+      ordered_list? || unordered_list? || definition_list?
     end
 
     def unordered_list?
@@ -158,15 +158,19 @@ module Orgmode
     end
 
     def plain_text?
-      not metadata? and not blank? and not plain_list?
+      !(metadata? || blank? || plain_list?)
     end
 
     def table_row?
-      check_assignment_or_regexp(:table_row, RegexpHelper.table_row)
+      return @assigned_paragraph_type == :table_row if @assigned_paragraph_type
+
+      RegexpHelper.table_row.match(@line)
     end
 
     def table_separator?
-      check_assignment_or_regexp(:table_separator, RegexpHelper.table_separator)
+      return @assigned_paragraph_type == :table_separator if @assigned_paragraph_type
+
+      RegexpHelper.table_separator.match(@line)
     end
 
     # Checks if this line is a table header.
@@ -314,12 +318,6 @@ module Orgmode
         :metadata
       when block_name && block_should_be_exported?
         block_name.to_sym
-        # case block_name.downcase.to_sym
-        # when :center, :comment, :example, :html, :quote, :src
-        #   block_name.downcase.to_sym
-        # else
-        #   :comment
-        # end
       when block_name && !block_should_be_exported?
           :comment
       when title?
