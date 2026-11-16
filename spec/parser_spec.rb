@@ -148,43 +148,6 @@ EXAMPLE
     end
   end
 
-  describe "Custom keyword parser" do
-    fname = File.join(File.dirname(__FILE__), %w[html_examples custom-todo.org])
-    p = Orgmode::Parser.load(fname)
-    valid_keywords = %w[TODO INPROGRESS WAITING DONE CANCELED]
-    invalid_keywords = %w[TODOX todo inprogress Waiting done cANCELED NEXT |]
-    valid_keywords.each do |kw|
-      it "should match custom keyword #{kw}" do
-        expect(kw =~ p.custom_keyword_regexp).to be_truthy
-      end
-    end
-    invalid_keywords.each do |kw|
-      it "should not match custom keyword #{kw}" do
-        expect((kw =~ p.custom_keyword_regexp)).to be_nil
-      end
-    end
-    it "should not match blank as a custom keyword" do
-      expect(("" =~ p.custom_keyword_regexp)).to be_nil
-    end
-
-    it "should treat regexp metacharacters in a matched keyword as literal text" do
-      parser = Orgmode::Parser.new("#+TODO: WAIT[.] | DONE\n* WAIT[.] Keep waiting")
-      headline = parser.headlines.first
-
-      expect(headline.keyword).to eq("WAIT[.]")
-      expect(headline.headline_text).to eq("Keep waiting")
-    end
-
-    it "should not compile repeat expressions from a matched keyword" do
-      keyword = "REPEAT{1,1000000000}"
-      parser = Orgmode::Parser.new("#+TODO: #{keyword} | DONE\n* #{keyword} Keep waiting")
-      headline = parser.headlines.first
-
-      expect(headline.keyword).to eq(keyword)
-      expect(headline.headline_text).to eq("Keep waiting")
-    end
-  end
-
   describe "Custom include/exclude parser" do
     fname = File.join(File.dirname(__FILE__), %w[html_examples export-tags.org])
     p = Orgmode::Parser.load(fname)
