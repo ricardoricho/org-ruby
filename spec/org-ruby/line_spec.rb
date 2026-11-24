@@ -1,4 +1,3 @@
-
 require 'spec_helper'
 
 module Orgmode
@@ -101,6 +100,40 @@ module Orgmode
         let(:line) { Orgmode::Line.new("hello!") }
 
         it { expect(line.paragraph_type).to be :paragraph}
+      end
+    end
+
+    # Maybe this could be another class of line: block line.
+    describe 'block_should_be_exported?' do
+      context "when line describe an export block" do
+        let(:line) { Line.new "#+begin_exports ruby" }
+
+        it { expect(line.block_should_be_exported?).to be_truthy }
+      end
+
+      context "when line describe a block" do
+        let(:line) { Line.new "#+begin_src ruby" }
+        it { expect(line.block_should_be_exported?).to be_truthy }
+
+        it 'does not export if exports is none' do
+          line = Line.new "#+begin_src ruby :exports none"
+          expect(line.block_should_be_exported?).to be_falsy
+        end
+
+                it 'does not export if exports is results' do
+          line = Line.new "#+begin_src ruby :exports results"
+          expect(line.block_should_be_exported?).to be_falsy
+        end
+
+        it 'export when :exports is code' do
+          line = Line.new "#+begin_src ruby :exports code"
+          expect(line.block_should_be_exported?).to be_truthy
+        end
+
+        it 'export when exports both' do
+          line = Line.new "#+begin_src ruby :exports both"
+          expect(line.block_should_be_exported?).to be_truthy
+        end
       end
     end
   end

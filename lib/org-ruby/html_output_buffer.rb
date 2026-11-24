@@ -139,10 +139,6 @@ module Orgmode
       list_indent_stack.pop
     end
 
-    def highlight(code, lang)
-      Highlighter.highlight(code, lang)
-    end
-
     def flush!
       return false if @buffer.string.empty?
       return @buffer = StringIO.new if (mode_is_table?(current_mode) && skip_tables?)
@@ -150,16 +146,16 @@ module Orgmode
       if preserve_whitespace?
         strip_code_block! if mode_is_code? current_mode
 
-        if (current_mode == :src)
+        case current_mode
+        when :src
           highlight_html_buffer
+        when :export
+          latex_buffer if block_lang == 'latex'
+        when :html, :raw_text
+          remove_new_lines_in_buffer(@new_paragraph == :start)
         else
-          if (current_mode == :html || current_mode == :raw_text)
-            remove_new_lines_in_buffer(@new_paragraph == :start)
-          else
-            @buffer.string = escapeHTML(@buffer.string)
-          end
+          @buffer.string = escapeHTML(@buffer.string)
         end
-
         # Whitespace is significant in :code mode. Always output the
         # buffer and do not do any additional translation.
         output.write(@buffer.string)
@@ -202,6 +198,14 @@ module Orgmode
       else
         @buffer.string = highlight(@buffer.string, normalize_lang)
       end
+    end
+
+    def highlight(code, lang)
+      Highlighter.highlight(code, lang)
+    end
+
+    def latex_buffer
+      @buffer.string = "\\[#{@buffer.string}\\]"
     end
 
     def skip_syntax_hightlight?
@@ -283,7 +287,7 @@ module Orgmode
 
     # Test if we're in an output mode in which whitespace is significant.
     def preserve_whitespace?
-      super || current_mode == :html
+      super || current_mode == :html || current_mode == :export
     end
 
     def rewrite_sub_superscripts(str)
@@ -372,6 +376,7 @@ module Orgmode
       rewrite_targets(str)
       rewrite_sub_superscripts(str) if options[:use_sub_superscripts]
       rewrite_links(str)
+      rewrite_latex(str)
       rewrite_row(str) if @output_type == :table_row
       rewrite_table_header(str) if @output_type == :table_header
       rewrite_footnote(str) if options[:export_footnotes]
@@ -424,6 +429,12 @@ module Orgmode
       end
     end
 
+    def rewrite_latex(str)
+      re_help.rewrite_latex(str) do |content|
+        "$#{content}$"
+      end
+    end
+
     def rewrite_links(str)
       re_help.rewrite_links(str) do |link, defi|
         [link, defi].compact.each do |text|
@@ -459,16 +470,6 @@ module Orgmode
       else
         block_lang
       end
-    end
-
-    # Helper method taken from Rails
-    # https://github.com/rails/rails/blob/c2c8ef57d6f00d1c22743dc43746f95704d67a95/activesupport/lib/active_support/core_ext/kernel/reporting.rb#L10
-    def silence_warnings
-      warn_level = $VERBOSE
-      $VERBOSE = nil
-      yield
-    ensure
-      $VERBOSE = warn_level
     end
 
     def strip_code_block!

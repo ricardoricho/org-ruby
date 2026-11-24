@@ -77,69 +77,80 @@ module Orgmode
     end
 
     describe '#push_mode' do
+      let(:indent) { :some_value }
+      let(:properties) { Hash.new }
+
       before do
         output.write "Buffer"
       end
 
       context 'when mode is a HtmlBlockTag' do
         let(:mode) { :paragraph }
-        let(:indent) { :some_value }
-        let(:properties) { Hash.new }
 
         it 'push HtmlBlock to the output buffer' do
           buffer.push_mode(mode, indent, properties)
           expect(buffer.output.string).to eq 'Buffer<p>'
         end
+      end
 
-        context 'when mode is example' do
-          let(:mode) { :example }
-          it 'sets class attributes to example' do
-            buffer.push_mode(mode, indent)
-            expect(buffer.output.string).to eq 'Buffer<pre class="example">'
-          end
+      context 'when mode is export' do
+        let(:mode) { :export }
+        it 'wrap block in pre tags' do
+          buffer.push_mode(mode, indent)
+          expect(buffer.output.string).to eq 'Buffer'
         end
+      end
 
-        context 'when mode is inline_example' do
-          let(:mode) { :inline_example }
-          it 'sets class attributes to example' do
-            buffer.push_mode(mode, indent)
-            expect(buffer.output.string).to eq 'Buffer<pre class="example">'
-          end
+      context 'when mode is example' do
+        let(:mode) { :example }
+        it 'sets class attributes to example' do
+          buffer.push_mode(mode, indent)
+          expect(buffer.output.string).to eq 'Buffer<pre class="example">'
         end
+      end
 
-        context 'when mode is center' do
-          let(:mode) { :center }
-          it 'sets style attribute to text-align: center' do
-            buffer.push_mode(mode, indent)
-            expect(buffer.output.string).to eq 'Buffer<div style="text-align: center">'
-          end
+      context 'when mode is inline_example' do
+        let(:mode) { :inline_example }
+
+        it 'sets class attributes to example' do
+          buffer.push_mode(mode, indent)
+          expect(buffer.output.string).to eq 'Buffer<pre class="example">'
         end
+      end
 
-        context 'when mode is src' do
-          let(:mode) { :src }
+      context 'when mode is center' do
+        let(:mode) { :center }
 
-          context 'when Buffer options include skip_syntax_highlight = true' do
-            let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, nil, { skip_syntax_highlight: true })}
+        it 'sets style attribute to text-align: center' do
+          buffer.push_mode(mode, indent)
+          expect(buffer.output.string).to eq 'Buffer<div style="text-align: center">'
+        end
+      end
+
+      context 'when mode is src' do
+        let(:mode) { :src }
+
+        context 'when Buffer options include skip_syntax_highlight = true' do
+          let(:buffer) { Orgmode::HtmlOutputBuffer.new(output, nil, { skip_syntax_highlight: true })}
+          before(:each) do
+            allow(buffer).to receive(:block_lang).and_return('')
+          end
+
+          it 'sets class attributes' do
+            buffer.push_mode(mode, indent)
+            expect(buffer.output.string).to eq 'Buffer<pre class="src">'
+          end
+
+          context 'when Buffer block_lang is not empty' do
+            let(:block_lang) { 'elisp' }
+
             before(:each) do
-              allow(buffer).to receive(:block_lang).and_return('')
+              allow(buffer).to receive(:block_lang).and_return(block_lang)
             end
 
-            it 'sets class attributes' do
-              buffer.push_mode(mode, indent)
-              expect(buffer.output.string).to eq 'Buffer<pre class="src">'
-            end
-
-            context 'when Buffer block_lang is not empty' do
-              let(:block_lang) { 'elisp' }
-
-              before(:each) do
-                allow(buffer).to receive(:block_lang).and_return(block_lang)
-              end
-
-              it 'set lang attribute' do
-                buffer.push_mode(mode, indent, properties)
-                expect(buffer.output.string).to eq 'Buffer<pre class="src" lang="elisp">'
-              end
+            it 'set lang attribute' do
+              buffer.push_mode(mode, indent, properties)
+              expect(buffer.output.string).to eq 'Buffer<pre class="src" lang="elisp">'
             end
           end
         end
@@ -150,7 +161,6 @@ module Orgmode
           end
 
           it 'does not add paragprah' do
-            mode = :src
             buffer.push_mode(mode, 'indent')
             expect(buffer.output.string).not_to match(/\Z\n/)
           end

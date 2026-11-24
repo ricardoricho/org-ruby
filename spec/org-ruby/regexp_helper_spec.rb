@@ -143,20 +143,31 @@ module Orgmode
           expect(content).to eq 'with content'
         end
       end
-      end
+    end
 
-      describe 'rewrite_link' do
-        let(:helper) { RegexpHelper.new }
-        let(:line_content) { "This is [[a link][with body]]" }
+    describe 'rewrite_latex' do
+      let(:helper) { RegexpHelper.new }
+      let(:line_content) { 'This is a @@latex:\lambda@@ expresion.' }
 
-        it 'replace links with block content' do
-          helper.rewrite_links(line_content) do |url, text|
-            expect(url).to eq 'a link'
-            expect(text).to eq 'with body'
-            'new_link'
-          end
-          expect(line_content).to eq 'This is new_link'
+      it 'replace latex tag with the html' do
+        helper.rewrite_latex(line_content) do |latex_content|
+          expect(latex_content).to eq '\lambda'
         end
       end
     end
+
+    describe 'rewrite_link' do
+      let(:helper) { RegexpHelper.new }
+      let(:line_content) { "This is [[a link][with body]]" }
+
+      it 'replace links with block content' do
+        helper.rewrite_links(line_content) do |url, text|
+          expect(url).to eq 'a link'
+          expect(text).to eq 'with body'
+          'new_link'
+        end
+        expect(line_content).to eq 'This is new_link'
+      end
+    end
   end
+end

@@ -140,7 +140,7 @@ module Orgmode
           table_header_set = false unless line.table?
         end
 
-        if %i[example html src].include?(mode)
+        if %i[example export html src].include?(mode)
           if previous_line
             set_name_for_code_block(previous_line, line)
             set_mode_for_results_block_contents(previous_line, line)
