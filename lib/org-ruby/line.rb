@@ -54,7 +54,7 @@ module Orgmode
     # Tests if a line is a comment.
     def comment?
       return @assigned_paragraph_type == :comment if @assigned_paragraph_type
-      return block_type.casecmp("COMMENT") if begin_block? || end_block?
+      return block_name == "comment" if begin_block? || end_block?
 
       RegexpHelper.comment.match(@line)
     end
@@ -102,7 +102,7 @@ module Orgmode
     end
 
     def plain_list?
-      ordered_list? or unordered_list? or definition_list?
+      ordered_list? || unordered_list? || definition_list?
     end
 
     def unordered_list?
@@ -158,15 +158,19 @@ module Orgmode
     end
 
     def plain_text?
-      not metadata? and not blank? and not plain_list?
+      !(metadata? || blank? || plain_list?)
     end
 
     def table_row?
-      check_assignment_or_regexp(:table_row, RegexpHelper.table_row)
+      return @assigned_paragraph_type == :table_row if @assigned_paragraph_type
+
+      RegexpHelper.table_row.match(@line)
     end
 
     def table_separator?
-      check_assignment_or_regexp(:table_separator, RegexpHelper.table_separator)
+      return @assigned_paragraph_type == :table_separator if @assigned_paragraph_type
+
+      RegexpHelper.table_separator.match(@line)
     end
 
     # Checks if this line is a table header.
@@ -179,45 +183,43 @@ module Orgmode
     end
 
     def begin_block?
-      match = RegexpHelper.block.match(@line)
-      match && match[1].downcase == 'begin'
+      block_match && block_match[:type].downcase == 'begin'
     end
 
     def end_block?
-      match = RegexpHelper.block.match(@line)
-      match && match[1].downcase == 'end'
+      block_match && block_match[:type].downcase == 'end'
     end
 
-    def block_type
-      $2 if RegexpHelper.block.match(@line)
+    def block_name
+      return unless block_match
+
+      @block_name ||= block_match[:name].downcase
     end
 
     def block_lang
-      $3 if RegexpHelper.block.match(@line)
-    end
-
-    def code_block?
-      block_type =~ /^(EXAMPLE|SRC)$/i
+      block_match && block_match[:language]
     end
 
     def block_switches
-      $4 if RegexpHelper.block.match(@line)
+      block_match && block_match[:switches]
+    end
+
+    def code_block?
+      block_match && %w[src example].include?(block_name)
     end
 
     def block_header_arguments
-      header_arguments = { }
+      header_arguments = {}
+      return header_arguments unless block_match
 
-      if RegexpHelper.block.match(@line)
-        header_arguments_string = $5
-        harray = header_arguments_string.split(' ')
-        harray.each_with_index do |arg, i|
-          next_argument = harray[i + 1]
-          if arg =~ /^:/ and not (next_argument.nil? or next_argument =~ /^:/)
-            header_arguments[arg] = next_argument
-          end
+      header_arguments_string = block_match[:arguments]
+      harray = header_arguments_string.split(' ')
+      harray.each_with_index do |arg, i|
+        next_argument = harray[i + 1]
+        if arg =~ /^:/ && !(next_argument.nil? || next_argument =~ /^:/)
+          header_arguments[arg] = next_argument
         end
       end
-
       header_arguments
     end
 
@@ -314,17 +316,10 @@ module Orgmode
         :property_drawer_item
       when metadata?
         :metadata
-      when block_type
-        if block_should_be_exported?
-          case block_type.downcase.to_sym
-          when :center, :comment, :example, :html, :quote, :src
-            block_type.downcase.to_sym
-          else
-            :comment
-          end
-        else
+      when block_name && block_should_be_exported?
+        block_name.to_sym
+      when block_name && !block_should_be_exported?
           :comment
-        end
       when title?
         :title
       when raw_text? # order is important! Raw text can be also a comment
@@ -360,8 +355,13 @@ module Orgmode
       end
     end
 
-    ######################################################################
     private
+
+    def block_match
+      return @block_match unless @block_match.nil?
+
+      @block_match = RegexpHelper.block.match(@line)
+    end
 
     # This function is an internal helper for determining the paragraph
     # type of a line... for instance, if the line is a comment or contains

@@ -14,14 +14,6 @@ module Orgmode
     # These are any lines before the first headline
     attr_reader :header_lines
 
-    # Regexp that recognizes words in custom_keywords.
-    def custom_keyword_regexp
-      return nil if document.custom_keywords.empty?
-
-      keywords = document.custom_keywords.join('|')
-      Regexp.new("^(#{keywords})\$")
-    end
-
     # A set of tags that, if present on any headlines in the org-file, means
     # only those headings will get exported.
     def export_select_tags
@@ -140,11 +132,10 @@ module Orgmode
         if %i[normal quote center].include?(mode)
           if line.headline?
             line = Headline.new(line.to_s, self, @parser_options[:offset])
-          elsif line.table_separator?
-            if previous_line && (previous_line.paragraph_type == :table_row) && !table_header_set
-              previous_line.assigned_paragraph_type = :table_header
-              table_header_set = true
-            end
+          end
+          if line.table_separator? && previous_line && (previous_line.paragraph_type == :table_row) && !table_header_set
+            previous_line.assigned_paragraph_type = :table_header
+            table_header_set = true
           end
           table_header_set = false unless line.table?
         end
@@ -242,8 +233,6 @@ module Orgmode
       else
         include_data = []
       end
-      # @todo: support ":minlevel"
-
       include_data
     end
 
@@ -254,11 +243,9 @@ module Orgmode
     end
 
     def set_mode_for_results_block_contents(previous_line, line)
-      if previous_line.start_of_results_code_block? \
-        || (previous_line.assigned_paragraph_type == :comment)
-        unless @next_results_block_should_be_exported || (line.paragraph_type == :blank)
+      if (previous_line.start_of_results_code_block? || previous_line.assigned_paragraph_type == :comment) &&
+         !(@next_results_block_should_be_exported || line.paragraph_type == :blank)
           line.assigned_paragraph_type = :comment
-        end
       end
     end
 
