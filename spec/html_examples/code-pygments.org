@@ -42,3 +42,29 @@ end
 * When including a file as an src code file
 
 #+INCLUDE: "./spec/html_examples/only-list.org" src text
+
+
+* Latex export
+
+To implement [[https://github.com/wallyqs/org-ruby/issues/108][#108]]. Rewrite ~@@latex:~ tag with ~$~, delimeters ,for example @@latex:4,\pi@@
+should be replace. And for block content, like the one below, appers between
+~\[~ and ~\]~.
+
+#+begin_src matlab :exports both :results output latex
+  m = [4*pi, 3*pi; 2*pi, pi];
+  result = latex(sym(m));
+  disp(result)
+#+end_src
+
+#+RESULTS:
+#+begin_export latex
+\left(\begin{array}{cc} 4\,\pi  & 3\,\pi \\ 2\,\pi  & \pi  \end{array}\right)
+#+end_export
+
+Another example:
+
+#+begin_export latex
+\frac{\delta x}{\delta y}
+#+end_export
+
+Code-pygments.org ends here.

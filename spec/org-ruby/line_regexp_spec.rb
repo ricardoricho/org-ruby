@@ -151,6 +151,16 @@ module Orgmode
       end
     end
 
+    describe '.inline_latex' do
+      it { expect(regexp.inline_latex).to match "text @@latex:\latex@@" }
+      it { expect(regexp.inline_latex).not_to match "text @@latex latex@@" }
+      it { expect(regexp.inline_latex).not_to match "text @@latex:latex" }
+      it 'captures latex content' do
+        match = regexp.inline_latex.match 'text @@latex:\latex@@ text'
+        expect(match[:content]).to eq '\latex'
+      end
+    end
+
     describe '.inline_example' do
       it{ expect(regexp.inline_example).to match ": expamle"}
       it{ expect(regexp.inline_example).to match " :  expamle"}

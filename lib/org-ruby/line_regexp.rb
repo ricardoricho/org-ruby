@@ -50,6 +50,10 @@ module Orgmode
       /^\s*:\s/
     end
 
+    def inline_latex
+      /@@latex:(?<content>[^\n]*)@@/
+    end
+
     def link_abbrev
       /^\s*#\+LINK:\s*(?<text>\w+)\s+(?<url>.+)$/i
     end

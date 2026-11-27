@@ -197,7 +197,7 @@ module Orgmode
     end
 
     def mode_is_code?(mode)
-      %i[example src].include?(mode)
+      %i[example export src].include?(mode)
     end
 
     def boundary_of_block?(line)
@@ -270,6 +270,7 @@ module Orgmode
       if mode_is_code? current_mode
         return true unless (line.end_block? &&
                             line.paragraph_type == current_mode)
+        return !line.end_block? if current_mode == :export && block_lang == 'latex'
       end
       return false if boundary_of_block? line
       return true if current_mode == :inline_example

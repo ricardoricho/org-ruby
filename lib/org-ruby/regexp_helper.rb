@@ -126,6 +126,13 @@ module Orgmode
       end
     end
 
+    def rewrite_latex(str)
+      str.gsub!(RegexpHelper.inline_latex) do |_match|
+        match = Regexp.last_match
+        yield match[:content]
+      end
+    end
+
     def rewrite_links(str)
       str.gsub!(RegexpHelper.org_link) do |_match|
         yield Regexp.last_match['url'], Regexp.last_match['friendly_text']
